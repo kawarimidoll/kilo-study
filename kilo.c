@@ -7,6 +7,11 @@
 #include <termios.h>
 #include <unistd.h>
 
+/*** defines ***/
+
+// 0x1f represents 00011111
+#define CTRL_KEY(k) ((k) & 0x1f)
+
 /*** data ***/
 
 struct termios orig_termios;
@@ -65,7 +70,7 @@ int main(void) {
       } else {
         printf("%d ('%c')\r\n", c, c);
       }
-      if (c == 'q') {
+      if (c == 'q' || c == CTRL_KEY('q')) {
         printf("quit\r\n");
         break;
       }
