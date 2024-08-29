@@ -48,6 +48,29 @@ void enableRawMode(void) {
   }
 }
 
+char editorReadKey(void) {
+  int nread;
+  char c;
+  while ((nread = read(STDIN_FILENO, &c, 1)) == 1) {
+    if (nread == -1 && errno != EAGAIN) {
+      die("read");
+    }
+  }
+  return c;
+}
+
+/*** input ***/
+
+int editorProcessKeypress(void) {
+  char c = editorReadKey();
+  switch (c) {
+    case 'q':
+    case CTRL_KEY('q'):
+      return 1;
+  }
+  return 0;
+}
+
 /*** init ***/
 
 int main(void) {
@@ -55,25 +78,9 @@ int main(void) {
   enableRawMode();
 
   while (1) {
-    char c = '\0';
-
-    int read_out = read(STDIN_FILENO, &c, 1);
-    if (read_out == -1 && errno != EAGAIN) {
-      die("read");
-    }
-    /* printf("read_out: %d\r\n", read_out); */
-    if (read_out == 0) {
-      // no input
-    } else {
-      if (iscntrl(c)) {
-        printf("%d\r\n", c);
-      } else {
-        printf("%d ('%c')\r\n", c, c);
-      }
-      if (c == 'q' || c == CTRL_KEY('q')) {
-        printf("quit\r\n");
-        break;
-      }
+    if (editorProcessKeypress()) {
+      printf("quit\r\n");
+      break;
     }
   }
 
