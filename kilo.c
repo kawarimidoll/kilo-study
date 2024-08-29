@@ -49,15 +49,18 @@ int main(void) {
       die("read");
     }
     /* printf("read_out: %d\r\n", read_out); */
-
-    if (iscntrl(c)) {
-      printf("%d\r\n", c);
+    if (read_out == 0) {
+      // no input
     } else {
-      printf("%d ('%c')\r\n", c, c);
-    }
-    if (c == 'q') {
-      printf("quit\r\n");
-      break;
+      if (iscntrl(c)) {
+        printf("%d\r\n", c);
+      } else {
+        printf("%d ('%c')\r\n", c, c);
+      }
+      if (c == 'q') {
+        printf("quit\r\n");
+        break;
+      }
     }
   }
 
