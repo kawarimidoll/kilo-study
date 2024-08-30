@@ -80,10 +80,18 @@ int getWindowSize(int* rows, int* cols) {
 
 /*** output ***/
 
+void editorDrawRows(void) {
+  int i;
+  for (i = 0; i < E.screenrows; i++) {
+    write(STDOUT_FILENO, "~\r\n", 3);
+  }
+}
 void editorRefreshScreen(void) {
   /* write to STDOUT_FILENO, 4 bytes string: "\x1b", "[", "2", "J" */
   /* "\x1b" represents escape character */
   write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+  editorDrawRows();
   write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
