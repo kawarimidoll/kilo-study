@@ -73,6 +73,7 @@ int getCursorPosition(int* rows, int* cols) {
   char buf[32];
   unsigned int i = 0;
 
+  /* query cursor position */
   if (write(STDOUT_FILENO, "\x1b[6n", 4) != 4) {
     return -1;
   }
@@ -107,6 +108,7 @@ int getCursorPosition(int* rows, int* cols) {
 int getWindowSize(int* rows, int* cols) {
   struct winsize ws;
   if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+    /* put cursor on the right bottom of current screen */
     if (write(STDOUT_FILENO, "\x1b[999C\x1b[999B", 12) != 12) {
       return -1;
     }
@@ -153,12 +155,20 @@ void editorDrawRows(struct abuf* ab) {
 
 void editorRefreshScreen(void) {
   struct abuf ab = ABUF_INIT;
+
+  /* hide cursor */
   abAppend(&ab, "\x1b[?25l", 6);
+  /* clear the screen */
   abAppend(&ab, "\x1b[2J", 4);
+  /* set cursor to origin */
   abAppend(&ab, "\x1b[H", 3);
+
   editorDrawRows(&ab);
+
   abAppend(&ab, "\x1b[H", 3);
+  /* show cursor */
   abAppend(&ab, "\x1b[?25h", 6);
+
   write(STDOUT_FILENO, ab.b, ab.len);
   abFree(&ab);
 }
