@@ -147,10 +147,11 @@ void abFree(struct abuf* ab) {
 void editorDrawRows(struct abuf* ab) {
   int i;
   for (i = 0; i < E.screenrows - 1; i++) {
-    abAppend(ab, "~\r\n", 3);
+    /* <esc>K to clear the right part of the current line */
+    abAppend(ab, "~\x1b[K\r\n", 6);
   }
   /* do not put newline on the last line to avoid to scroll */
-  abAppend(ab, "~", 1);
+  abAppend(ab, "~\x1b[K", 4);
 }
 
 void editorRefreshScreen(void) {
@@ -158,8 +159,6 @@ void editorRefreshScreen(void) {
 
   /* hide cursor */
   abAppend(&ab, "\x1b[?25l", 6);
-  /* clear the screen */
-  abAppend(&ab, "\x1b[2J", 4);
   /* set cursor to origin */
   abAppend(&ab, "\x1b[H", 3);
 
