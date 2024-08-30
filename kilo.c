@@ -11,6 +11,8 @@
 
 /*** defines ***/
 
+#define KILO_VERSION "0.0.1"
+
 // 0x1f represents 00011111
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -147,8 +149,20 @@ void abFree(struct abuf* ab) {
 void editorDrawRows(struct abuf* ab) {
   int i;
   for (i = 0; i < E.screenrows - 1; i++) {
-    /* <esc>K to clear the right part of the current line */
-    abAppend(ab, "~\x1b[K\r\n", 6);
+    if (i == E.screenrows / 3) {
+      char welcome[80];
+      int welcomelen = snprintf(welcome, sizeof(welcome),
+                                "Kilo editor -- version %s", KILO_VERSION);
+      if (welcomelen > E.screencols) {
+        welcomelen = E.screencols;
+      }
+      abAppend(ab, welcome, welcomelen);
+
+      abAppend(ab, "\x1b[K\r\n", 5);
+    } else {
+      /* <esc>K to clear the right part of the current line */
+      abAppend(ab, "~\x1b[K\r\n", 6);
+    }
   }
   /* do not put newline on the last line to avoid to scroll */
   abAppend(ab, "~\x1b[K", 4);
