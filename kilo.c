@@ -19,8 +19,8 @@
 /*** data ***/
 
 struct editorConfig {
-  int screenrows;
-  int screencols;
+  int cx, cy;
+  int screenrows, screencols;
   struct termios orig_termios;
 };
 struct editorConfig E;
@@ -187,7 +187,11 @@ void editorRefreshScreen(void) {
 
   editorDrawRows(&ab);
 
-  abAppend(&ab, "\x1b[H", 3);
+  char buf[32];
+  /* need +1 because cx/cy is 0-origin, cursor in screen is 1-origin */
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+  abAppend(&ab, buf, strlen(buf));
+
   /* show cursor */
   abAppend(&ab, "\x1b[?25h", 6);
 
@@ -197,12 +201,36 @@ void editorRefreshScreen(void) {
 
 /*** input ***/
 
+void editorMoveCursor(char key) {
+  switch (key) {
+    case 'w':
+      E.cy--;
+      break;
+    case 's':
+      E.cy++;
+      break;
+    case 'a':
+      E.cx--;
+      break;
+    case 'd':
+      E.cx++;
+      break;
+  }
+}
+
 int editorProcessKeypress(void) {
   char c = editorReadKey();
   switch (c) {
     case 'q':
     case CTRL_KEY('q'):
       return 1;
+
+    case 'w':
+    case 'a':
+    case 's':
+    case 'd':
+      editorMoveCursor(c);
+      break;
   }
   return 0;
 }
@@ -210,6 +238,9 @@ int editorProcessKeypress(void) {
 /*** init ***/
 
 void initEditor(void) {
+  E.cx = 0;
+  E.cy = 0;
+
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) {
     die("getWindowSize");
   }
