@@ -17,10 +17,10 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 
 enum editorKey {
-  ARROW_LEFT = 'a',
-  ARROW_RIGHT = 'd',
-  ARROW_UP = 'w',
-  ARROW_DOWN = 's'
+  ARROW_LEFT = 1000,
+  ARROW_RIGHT,
+  ARROW_UP,
+  ARROW_DOWN,
 };
 
 /*** data ***/
@@ -67,7 +67,7 @@ void enableRawMode(void) {
   }
 }
 
-char editorReadKey(void) {
+int editorReadKey(void) {
   int nread;
   char c;
   while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
@@ -227,7 +227,7 @@ void editorRefreshScreen(void) {
 
 /*** input ***/
 
-void editorMoveCursor(char key) {
+void editorMoveCursor(int key) {
   switch (key) {
     case ARROW_UP:
       E.cy--;
@@ -245,7 +245,7 @@ void editorMoveCursor(char key) {
 }
 
 int editorProcessKeypress(void) {
-  char c = editorReadKey();
+  int c = editorReadKey();
   switch (c) {
     case 'q':
     case CTRL_KEY('q'):
