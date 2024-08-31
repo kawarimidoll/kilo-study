@@ -68,6 +68,25 @@ char editorReadKey(void) {
       die("read");
     }
   }
+
+  if (c == '\x1b') {
+    char seq[3];
+    if (read(STDIN_FILENO, &seq[0], 1) == 1 &&
+        read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
+      switch (seq[1]) {
+        case 'A':
+          return 'w';
+        case 'B':
+          return 's';
+        case 'C':
+          return 'd';
+        case 'D':
+          return 'a';
+      }
+    }
+
+    return '\x1b';
+  }
   return c;
 }
 
