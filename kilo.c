@@ -16,6 +16,13 @@
 // 0x1f represents 00011111
 #define CTRL_KEY(k) ((k) & 0x1f)
 
+enum editorKey {
+  ARROW_LEFT = 'a',
+  ARROW_RIGHT = 'd',
+  ARROW_UP = 'w',
+  ARROW_DOWN = 's'
+};
+
 /*** data ***/
 
 struct editorConfig {
@@ -75,13 +82,13 @@ char editorReadKey(void) {
         read(STDIN_FILENO, &seq[1], 1) == 1 && seq[0] == '[') {
       switch (seq[1]) {
         case 'A':
-          return 'w';
+          return ARROW_UP;
         case 'B':
-          return 's';
+          return ARROW_DOWN;
         case 'C':
-          return 'd';
+          return ARROW_RIGHT;
         case 'D':
-          return 'a';
+          return ARROW_LEFT;
       }
     }
 
@@ -222,16 +229,16 @@ void editorRefreshScreen(void) {
 
 void editorMoveCursor(char key) {
   switch (key) {
-    case 'w':
+    case ARROW_UP:
       E.cy--;
       break;
-    case 's':
+    case ARROW_DOWN:
       E.cy++;
       break;
-    case 'a':
+    case ARROW_LEFT:
       E.cx--;
       break;
-    case 'd':
+    case ARROW_RIGHT:
       E.cx++;
       break;
   }
@@ -244,10 +251,10 @@ int editorProcessKeypress(void) {
     case CTRL_KEY('q'):
       return 1;
 
-    case 'w':
-    case 'a':
-    case 's':
-    case 'd':
+    case ARROW_LEFT:
+    case ARROW_RIGHT:
+    case ARROW_UP:
+    case ARROW_DOWN:
       editorMoveCursor(c);
       break;
   }
