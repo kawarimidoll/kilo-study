@@ -254,7 +254,8 @@ void editorDrawRows(struct abuf* ab) {
   int i;
   for (i = 0; i < E.screenrows - 1; i++) {
     if (i >= E.numrows) {
-      if (i == E.screenrows / 3) {
+      /* display welcome message when file is NOT opened (E.numrows==0) */
+      if (E.numrows == 0 && i == E.screenrows / 2) {
         char welcome[80];
         int welcomelen = snprintf(welcome, sizeof(welcome),
                                   "Kilo editor -- version %s", KILO_VERSION);
