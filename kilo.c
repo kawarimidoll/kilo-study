@@ -369,7 +369,17 @@ void editorDrawRows(struct abuf* ab) {
     abAppend(ab, "\x1b[K\r\n", 5);
   }
   /* do not put newline on the last line to avoid to scroll */
-  abAppend(ab, "~\x1b[K", 4);
+  /* abAppend(ab, "~\x1b[K", 4); */
+}
+
+void editorDrawStatusBar(struct abuf* ab) {
+  abAppend(ab, "\x1b[7m", 4);
+  int len = 0;
+  while (len < E.screencols) {
+    abAppend(ab, " ", 1);
+    len++;
+  }
+  abAppend(ab, "\x1b[m", 3);
 }
 
 void editorRefreshScreen(void) {
@@ -383,6 +393,7 @@ void editorRefreshScreen(void) {
   abAppend(&ab, "\x1b[H", 3);
 
   editorDrawRows(&ab);
+  editorDrawStatusBar(&ab);
 
   char buf[32];
   /* need +1 because cx/cy is 0-origin, cursor in screen is 1-origin */
@@ -509,6 +520,7 @@ void initEditor(void) {
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) {
     die("getWindowSize");
   }
+  E.screenrows -= 1;
 }
 
 int main(int argc, char* argv[]) {
