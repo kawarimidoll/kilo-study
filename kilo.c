@@ -42,7 +42,7 @@ typedef struct erow {
 
 struct editorConfig {
   int cx, cy;
-  int rowoff;
+  int rowoff, coloff;
   int screenrows, screencols;
   struct termios orig_termios;
   int numrows;
@@ -267,6 +267,12 @@ void editorScroll(void) {
   if (E.cy >= E.rowoff + E.screenrows) {
     E.rowoff = E.cy - E.screenrows + 1;
   }
+  if (E.cx < E.coloff) {
+    E.coloff = E.cx;
+  }
+  if (E.cx >= E.coloff + E.screencols) {
+    E.coloff = E.cx - E.screencols + 1;
+  }
 }
 
 void editorDrawRows(struct abuf* ab) {
@@ -296,11 +302,14 @@ void editorDrawRows(struct abuf* ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[filerow].size;
+      int len = E.row[filerow].size - E.coloff;
+      if (len < 0) {
+        len = 0;
+      }
       if (len > E.screencols) {
         len = E.screencols;
       }
-      abAppend(ab, E.row[filerow].chars, len);
+      abAppend(ab, &E.row[filerow].chars[E.coloff], len);
     }
     /* <esc>K to clear the right part of the current line */
     abAppend(ab, "\x1b[K\r\n", 5);
@@ -323,7 +332,8 @@ void editorRefreshScreen(void) {
 
   char buf[32];
   /* need +1 because cx/cy is 0-origin, cursor in screen is 1-origin */
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, E.cx + 1);
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
+           (E.cx - E.coloff) + 1);
   abAppend(&ab, buf, strlen(buf));
 
   /* show cursor */
@@ -353,9 +363,7 @@ void editorMoveCursor(int key) {
       }
       break;
     case ARROW_RIGHT:
-      if (E.cy != E.screencols - 1) {
-        E.cx++;
-      }
+      E.cx++;
       break;
   }
 }
@@ -411,6 +419,7 @@ void initEditor(void) {
   E.cx = 0;
   E.cy = 0;
   E.rowoff = 0;
+  E.coloff = 0;
   E.numrows = 0;
   E.row = NULL;
 
