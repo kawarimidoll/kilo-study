@@ -42,6 +42,7 @@ typedef struct erow {
 
 struct editorConfig {
   int cx, cy;
+  int rowoff;
   int screenrows, screencols;
   struct termios orig_termios;
   int numrows;
@@ -259,10 +260,20 @@ void abFree(struct abuf* ab) {
 
 /*** output ***/
 
+void editorScroll(void) {
+  if (E.cy < E.rowoff) {
+    E.rowoff = E.cy;
+  }
+  if (E.cy >= E.rowoff + E.screenrows) {
+    E.rowoff = E.cy - E.screenrows + 1;
+  }
+}
+
 void editorDrawRows(struct abuf* ab) {
   int i;
   for (i = 0; i < E.screenrows - 1; i++) {
-    if (i >= E.numrows) {
+    int filerow = i + E.rowoff;
+    if (filerow >= E.numrows) {
       /* display welcome message when file is NOT opened (E.numrows==0) */
       if (E.numrows == 0 && i == E.screenrows / 2) {
         char welcome[80];
@@ -285,11 +296,11 @@ void editorDrawRows(struct abuf* ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[i].size;
+      int len = E.row[filerow].size;
       if (len > E.screencols) {
         len = E.screencols;
       }
-      abAppend(ab, E.row[i].chars, len);
+      abAppend(ab, E.row[filerow].chars, len);
     }
     /* <esc>K to clear the right part of the current line */
     abAppend(ab, "\x1b[K\r\n", 5);
@@ -299,6 +310,8 @@ void editorDrawRows(struct abuf* ab) {
 }
 
 void editorRefreshScreen(void) {
+  editorScroll();
+
   struct abuf ab = ABUF_INIT;
 
   /* hide cursor */
@@ -310,7 +323,7 @@ void editorRefreshScreen(void) {
 
   char buf[32];
   /* need +1 because cx/cy is 0-origin, cursor in screen is 1-origin */
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, E.cx + 1);
   abAppend(&ab, buf, strlen(buf));
 
   /* show cursor */
@@ -330,7 +343,7 @@ void editorMoveCursor(int key) {
       }
       break;
     case ARROW_DOWN:
-      if (E.cy != E.screenrows - 1) {
+      if (E.cy < E.numrows) {
         E.cy++;
       }
       break;
@@ -340,7 +353,7 @@ void editorMoveCursor(int key) {
       }
       break;
     case ARROW_RIGHT:
-      if (E.cx != E.screencols - 1) {
+      if (E.cy != E.screencols - 1) {
         E.cx++;
       }
       break;
@@ -397,6 +410,7 @@ int editorProcessKeypress(void) {
 void initEditor(void) {
   E.cx = 0;
   E.cy = 0;
+  E.rowoff = 0;
   E.numrows = 0;
   E.row = NULL;
 
