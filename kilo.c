@@ -369,6 +369,19 @@ int editorProcessKeypress(void) {
       }
     } break;
 
+    case 'h':
+      editorMoveCursor(ARROW_LEFT);
+      break;
+    case 'l':
+      editorMoveCursor(ARROW_RIGHT);
+      break;
+    case 'k':
+      editorMoveCursor(ARROW_UP);
+      break;
+    case 'j':
+      editorMoveCursor(ARROW_DOWN);
+      break;
+
     case ARROW_LEFT:
     case ARROW_RIGHT:
     case ARROW_UP:
