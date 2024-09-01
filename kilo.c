@@ -346,6 +346,8 @@ void editorRefreshScreen(void) {
 /*** input ***/
 
 void editorMoveCursor(int key) {
+  erow* currentrow = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+
   switch (key) {
     case ARROW_UP:
       if (E.cy != 0) {
@@ -363,8 +365,17 @@ void editorMoveCursor(int key) {
       }
       break;
     case ARROW_RIGHT:
-      E.cx++;
+      if (currentrow && E.cx < currentrow->size) {
+        E.cx++;
+      }
       break;
+  }
+
+  /* truncate cursor position after vertical move */
+  currentrow = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  int rowlen = currentrow ? currentrow->size : 0;
+  if (E.cx > rowlen) {
+    E.cx = rowlen;
   }
 }
 
