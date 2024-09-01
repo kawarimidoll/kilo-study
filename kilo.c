@@ -45,7 +45,7 @@ struct editorConfig {
   int screenrows, screencols;
   struct termios orig_termios;
   int numrows;
-  erow row;
+  erow* row;
 };
 struct editorConfig E;
 
@@ -197,6 +197,16 @@ int getWindowSize(int* rows, int* cols) {
   return 0;
 }
 
+/*** row operations ***/
+
+void editorAppendRow(char* s, size_t len) {
+  E.row.size = len;
+  E.row.chars = malloc(len + 1);
+  memcpy(E.row.chars, s, len);
+  E.row.chars[len] = '\0';
+  E.numrows = 1;
+}
+
 /*** file io ***/
 
 void editorOpen(char* filename) {
@@ -215,11 +225,7 @@ void editorOpen(char* filename) {
       linelen--;
     }
 
-    E.row.size = linelen;
-    E.row.chars = malloc(linelen + 1);
-    memcpy(E.row.chars, line, linelen);
-    E.row.chars[linelen] = '\0';
-    E.numrows = 1;
+    editorAppendRow(line, linelen);
   }
   free(line);
   fclose(fp);
@@ -376,6 +382,7 @@ void initEditor(void) {
   E.cx = 0;
   E.cy = 0;
   E.numrows = 0;
+  E.row = NULL;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) {
     die("getWindowSize");
