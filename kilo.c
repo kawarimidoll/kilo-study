@@ -461,6 +461,15 @@ int editorProcessKeypress(void) {
     case CTRL_KEY('q'):
       return 1;
 
+    case 'g':
+      E.cy = 0;
+      editorMoveCursor(ARROW_UP);
+      break;
+    case 'G':
+      E.cy = E.numrows;
+      editorMoveCursor(ARROW_DOWN);
+      break;
+
     case HOME_KEY:
       E.cx = 0;
       break;
