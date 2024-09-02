@@ -265,6 +265,29 @@ void editorAppendRow(char* s, size_t len) {
   E.numrows++;
 }
 
+void editorRowInsertChar(erow* row, int at, int c) {
+  if (at < 0 || at > row->size) {
+    at = row->size;
+  }
+  /* add 2 because we need allocate new character and null byte */
+  row->chars = realloc(row->chars, row->size + 2);
+  memmove(&row->chars[at + 1], &row->chars[at], row->size - at + 1);
+  row->size++;
+  row->chars[at] = c;
+  editorUpdateRow(row);
+}
+
+/*** editor operations ***/
+
+void editorInsertChar(int c) {
+  if (E.cy == E.numrows) {
+    /* append line */
+    editorAppendRow("", 0);
+  }
+  editorRowInsertChar(&E.row[E.cy], E.cx, c);
+  E.cx++;
+}
+
 /*** file io ***/
 
 void editorOpen(char* filename) {
@@ -496,18 +519,9 @@ void editorMoveCursor(int key) {
 int editorProcessKeypress(void) {
   int c = editorReadKey();
   switch (c) {
-    case 'q':
+    /* case 'q': */
     case CTRL_KEY('q'):
       return 1;
-
-    case 'g':
-      E.cy = 0;
-      editorMoveCursor(ARROW_UP);
-      break;
-    case 'G':
-      E.cy = E.numrows;
-      editorMoveCursor(ARROW_DOWN);
-      break;
 
     case HOME_KEY:
       E.cx = 0;
@@ -535,24 +549,15 @@ int editorProcessKeypress(void) {
       }
     } break;
 
-    case 'h':
-      editorMoveCursor(ARROW_LEFT);
-      break;
-    case 'l':
-      editorMoveCursor(ARROW_RIGHT);
-      break;
-    case 'k':
-      editorMoveCursor(ARROW_UP);
-      break;
-    case 'j':
-      editorMoveCursor(ARROW_DOWN);
-      break;
-
     case ARROW_LEFT:
     case ARROW_RIGHT:
     case ARROW_UP:
     case ARROW_DOWN:
       editorMoveCursor(c);
+      break;
+
+    default:
+      editorInsertChar(c);
       break;
   }
   return 0;
@@ -585,7 +590,7 @@ int main(int argc, char* argv[]) {
   if (argc >= 2) {
     editorOpen(argv[1]);
   }
-  editorSetStatusMessage("HELP: q = quit, h/j/k/l = move");
+  editorSetStatusMessage("HELP: ctrl-q = quit, arrow keys = move");
 
   while (1) {
     editorRefreshScreen();
