@@ -548,21 +548,40 @@ int editorProcessKeypress(void) {
       break;
 
     case PAGE_UP:
-    case PAGE_DOWN: {
-      if (c == PAGE_UP) {
-        E.cy = E.rowoff;
-      } else {
-        E.cy = E.rowoff + E.screenrows - 1;
-        if (E.cy > E.numrows) {
-          E.cy = E.numrows;
-        }
+    case CTRL_KEY('u'): {
+      E.cy = E.rowoff;
+
+      int times = E.screenrows;
+      while (times--) {
+        editorMoveCursor(ARROW_UP);
+      }
+    } break;
+
+    case PAGE_DOWN:
+    case CTRL_KEY('d'): {
+      E.cy = E.rowoff + E.screenrows - 1;
+      if (E.cy > E.numrows) {
+        E.cy = E.numrows;
       }
 
       int times = E.screenrows;
       while (times--) {
-        editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+        editorMoveCursor(ARROW_DOWN);
       }
     } break;
+
+    case CTRL_KEY('b'):
+      editorMoveCursor(ARROW_LEFT);
+      break;
+    case CTRL_KEY('f'):
+      editorMoveCursor(ARROW_RIGHT);
+      break;
+    case CTRL_KEY('p'):
+      editorMoveCursor(ARROW_UP);
+      break;
+    case CTRL_KEY('n'):
+      editorMoveCursor(ARROW_DOWN);
+      break;
 
     case ARROW_LEFT:
     case ARROW_RIGHT:
