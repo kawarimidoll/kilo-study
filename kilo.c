@@ -47,6 +47,7 @@ enum editorHighlight {
   HL_KEYWORD1,
   HL_KEYWORD2,
   HL_NUMBER,
+  HL_HEX,
   HL_MATCH,
 };
 
@@ -287,6 +288,7 @@ void editorUpdateSyntax(erow* row) {
 
   int prev_sep = 1;
   int in_string = 0;
+  int in_hex = 0;
   int in_comment = 0;
 
   int i = 0;
@@ -345,6 +347,20 @@ void editorUpdateSyntax(erow* row) {
     }
 
     if (E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
+      /* hex detection is written by me, not tested strictly */
+      if (in_hex) {
+        if (isxdigit(c)) {
+          row->hl[i] = HL_HEX;
+        } else {
+          in_hex = 0;
+        }
+      } else if (prev_sep && !strncmp(&row->render[i], "0x", 2)) {
+        memset(&row->hl[i], HL_HEX, 2);
+        i += 2;
+        in_hex = 1;
+        continue;
+      }
+
       if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
           (prev_hl == HL_NUMBER && c == '.')) {
         row->hl[i] = HL_NUMBER;
@@ -385,6 +401,7 @@ void editorUpdateSyntax(erow* row) {
 int editorSyntaxToColor(int hl) {
   switch (hl) {
     case HL_NUMBER:
+    case HL_HEX:
       return 31;
     case HL_STRING:
       return 35;
