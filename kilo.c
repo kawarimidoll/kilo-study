@@ -240,7 +240,8 @@ void editorUpdateSyntax(erow* row) {
     char c = row->render[i];
     unsigned char prev_hl = (i > 0) ? row->hl[i - 1] : HL_NORMAL;
 
-    if (isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) {
+    if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
+        (prev_hl == HL_NUMBER && c == '.')) {
       row->hl[i] = HL_NUMBER;
       prev_sep = 0;
       i++;
