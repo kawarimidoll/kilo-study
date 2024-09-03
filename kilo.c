@@ -752,9 +752,11 @@ int editorProcessKeypress(void) {
       break;
 
     case HOME_KEY:
+    case CTRL_KEY('a'):
       E.cx = 0;
       break;
     case END_KEY:
+    case CTRL_KEY('e'):
       if (E.cy < E.numrows) {
         E.cx = E.row[E.cy].size;
       }
