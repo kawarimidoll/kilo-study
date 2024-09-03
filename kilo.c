@@ -21,6 +21,7 @@
 
 #define KILO_VERSION "0.0.1"
 #define KILO_TAB_STOP 8
+#define KILO_QUIT_TIMES 2
 
 // 0x1f represents 00011111
 #define CTRL_KEY(k) ((k) & 0x1f)
@@ -573,6 +574,7 @@ void editorMoveCursor(int key) {
 }
 
 int editorProcessKeypress(void) {
+  static int quit_times = KILO_QUIT_TIMES;
   int c = editorReadKey();
   switch (c) {
     case '\r':
@@ -581,6 +583,14 @@ int editorProcessKeypress(void) {
 
     /* case 'q': */
     case CTRL_KEY('q'):
+      if (E.dirty && quit_times > 0) {
+        editorSetStatusMessage(
+            "WARNING! File has unsaved changes. "
+            "Press ctrl-q %d more times to quit.",
+            quit_times);
+        quit_times--;
+        return 0;
+      }
       return 1;
 
     case CTRL_KEY('s'):
@@ -653,6 +663,7 @@ int editorProcessKeypress(void) {
       editorInsertChar(c);
       break;
   }
+  quit_times = KILO_QUIT_TIMES;
   return 0;
 }
 
