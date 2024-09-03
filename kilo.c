@@ -293,6 +293,34 @@ int editorSyntaxToColor(int hl) {
   }
 }
 
+void editorSelectSyntaxHighlight(void) {
+  E.syntax = NULL;
+  if (E.filename == NULL) {
+    return;
+  }
+
+  char* ext = strrchr(E.filename, '.');
+  for (unsigned int j = 0; j < HLDB_ENTRIES; j++) {
+    struct editorSyntax* s = &HLDB[j];
+    unsigned int i = 0;
+    while (s->filematch[i]) {
+      int is_ext = (s->filematch[i][0] == '.');
+      /* strcmp returns 0 if two strings are same  */
+      if ((is_ext && ext && !strcmp(ext, s->filematch[i])) ||
+          (!is_ext && strstr(E.filename, s->filematch[i]))) {
+        E.syntax = s;
+
+        for (int i = 0; i < E.numrows; i++) {
+          editorUpdateSyntax(&E.row[i]);
+        }
+
+        return;
+      }
+      i++;
+    }
+  }
+}
+
 /*** row operations ***/
 
 int editorRowCxToRx(erow* row, int cx) {
@@ -493,6 +521,7 @@ char* editorRowsToString(int* buflen) {
 void editorOpen(char* filename) {
   free(E.filename);
   E.filename = strdup(filename);
+  editorSelectSyntaxHighlight();
 
   FILE* fp = fopen(filename, "r");
   if (!fp) {
@@ -523,6 +552,7 @@ void editorSave(void) {
       editorSetStatusMessage("Save aborted");
       return;
     }
+    editorSelectSyntaxHighlight();
   }
 
   int len;
