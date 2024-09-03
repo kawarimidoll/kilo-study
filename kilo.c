@@ -74,6 +74,7 @@ struct editorConfig {
   char* filename;
   char statusmsg[80];
   time_t statusmsg_time;
+  struct editorSyntax* syntax;
   erow* row;
 };
 struct editorConfig E;
@@ -255,6 +256,10 @@ void editorUpdateSyntax(erow* row) {
   row->hl = realloc(row->hl, row->rsize);
   memset(row->hl, HL_NORMAL, row->rsize);
 
+  if (E.syntax == NULL) {
+    return;
+  }
+
   int prev_sep = 1;
 
   int i = 0;
@@ -262,12 +267,14 @@ void editorUpdateSyntax(erow* row) {
     char c = row->render[i];
     unsigned char prev_hl = (i > 0) ? row->hl[i - 1] : HL_NORMAL;
 
-    if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
-        (prev_hl == HL_NUMBER && c == '.')) {
-      row->hl[i] = HL_NUMBER;
-      prev_sep = 0;
-      i++;
-      continue;
+    if (E.syntax->flags & HL_HIGHLIGHT_NUMBERS) {
+      if ((isdigit(c) && (prev_sep || prev_hl == HL_NUMBER)) ||
+          (prev_hl == HL_NUMBER && c == '.')) {
+        row->hl[i] = HL_NUMBER;
+        prev_sep = 0;
+        i++;
+        continue;
+      }
     }
 
     prev_sep = is_separator(c);
@@ -733,7 +740,9 @@ void editorDrawStatusBar(struct abuf* ab) {
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
   /* add 1 since E.cy is 0-indexed */
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%d/%d", E.cy + 1, E.numrows);
+  int rlen =
+      snprintf(rstatus, sizeof(rstatus), "%s | %d/%d",
+               E.syntax ? E.syntax->filetype : "[no ft]", E.cy + 1, E.numrows);
   if (len > E.screencols) {
     len = E.screencols;
   }
@@ -1004,6 +1013,7 @@ void initEditor(void) {
   E.filename = NULL;
   E.statusmsg[0] = '\0';
   E.statusmsg_time = 0;
+  E.syntax = NULL;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1) {
     die("getWindowSize");
