@@ -1083,7 +1083,7 @@ void editorMoveCursor(int key) {
   }
 }
 
-int editorProcessKeypress(void) {
+void editorProcessKeypress(void) {
   static int quit_times = KILO_QUIT_TIMES;
   int c = editorReadKey();
   switch (c) {
@@ -1099,9 +1099,13 @@ int editorProcessKeypress(void) {
             "Press ctrl-q %d more times to quit.",
             quit_times);
         quit_times--;
-        return 0;
+        return;
       }
-      return 1;
+      write(STDOUT_FILENO, "\x1b[2J", 4);
+      write(STDOUT_FILENO, "\x1b[H", 3);
+      printf("quit kilo\r\n");
+      exit(0);
+      break;
 
     case CTRL_KEY('s'):
       editorSave();
@@ -1183,7 +1187,6 @@ int editorProcessKeypress(void) {
       break;
   }
   quit_times = KILO_QUIT_TIMES;
-  return 0;
 }
 
 /*** init ***/
@@ -1209,7 +1212,6 @@ void initEditor(void) {
 }
 
 int main(int argc, char* argv[]) {
-  printf("start kilo\r\n");
   enableRawMode();
   initEditor();
   if (argc >= 2) {
@@ -1220,14 +1222,8 @@ int main(int argc, char* argv[]) {
 
   while (1) {
     editorRefreshScreen();
-    if (editorProcessKeypress()) {
-      write(STDOUT_FILENO, "\x1b[2J", 4);
-      write(STDOUT_FILENO, "\x1b[H", 3);
-      printf("quit\r\n");
-      break;
-    }
+    editorProcessKeypress();
   }
 
-  printf("end kilo\r\n");
   return 0;
 }
