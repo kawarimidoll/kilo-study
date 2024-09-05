@@ -16,12 +16,44 @@
       };
     in {
       default = pkgs.mkShell {
-        buildInputs = with pkgs; [cargo];
+        buildInputs = with pkgs; [cargo rustfmt];
         shellHook = ''
           echo "cargo"
           which cargo
           cargo --version
         '';
+      };
+    });
+
+    packages = forAllSystems (system: let
+      pkgs = import nixpkgs {
+        inherit system;
+      };
+    in {
+      default = pkgs.stdenv.mkDerivation {
+        name = "kilo-study";
+        src = ./.;
+        buildInputs = with pkgs; [cargo];
+        buildPhase = ''
+          cargo build
+        '';
+        installPhase = ''
+          install -D -t $out/bin target/debug/kilo
+        '';
+      };
+    });
+
+    apps = forAllSystems (system: let
+      pkgs = import nixpkgs {
+        inherit system;
+      };
+    in {
+      default = {
+        type = "app";
+        buildInputs = with pkgs; [cargo];
+        program = toString (pkgs.writeShellScript "cargo-run" ''
+          cargo run
+        '');
       };
     });
   };
