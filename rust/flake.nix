@@ -1,5 +1,5 @@
 {
-  description = "kilo-study development environment";
+  description = "hecto-study development environment";
 
   inputs.nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
 
@@ -31,14 +31,14 @@
       };
     in {
       default = pkgs.stdenv.mkDerivation {
-        name = "kilo-study";
+        name = "hecto-study";
         src = ./.;
         buildInputs = with pkgs; [cargo];
         buildPhase = ''
           cargo build
         '';
         installPhase = ''
-          install -D -t $out/bin target/debug/kilo
+          install -D -t $out/bin target/debug/hecto
         '';
       };
     });
