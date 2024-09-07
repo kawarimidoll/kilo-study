@@ -55,6 +55,13 @@
           cargo run
         '');
       };
+      clippy = {
+        type = "app";
+        buildInputs = with pkgs; [cargo];
+        program = toString (pkgs.writeShellScript "cargo-run" ''
+          cargo clippy
+        '');
+      };
     });
   };
 }
