@@ -1,6 +1,7 @@
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
 use terminal::Terminal;
 mod terminal;
+use std::io::Error;
 
 pub struct Editor {
     should_quit: bool,
@@ -18,7 +19,7 @@ impl Editor {
         result.unwrap();
     }
 
-    fn repl(&mut self) -> Result<(), std::io::Error> {
+    fn repl(&mut self) -> Result<(), Error> {
         loop {
             self.refresh_screen()?;
             if self.should_quit {
@@ -40,7 +41,7 @@ impl Editor {
             }
         }
     }
-    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+    fn refresh_screen(&self) -> Result<(), Error> {
         Terminal::hide_cursor()?;
         if self.should_quit {
             Terminal::clear_screen()?;
@@ -53,7 +54,7 @@ impl Editor {
         Terminal::execute()?;
         Ok(())
     }
-    fn draw_rows() -> Result<(), std::io::Error> {
+    fn draw_rows() -> Result<(), Error> {
         let height = Terminal::size()?.1;
         for current_row in 0..height - 1 {
             let str = format!("~ {current_row}\r\n");
