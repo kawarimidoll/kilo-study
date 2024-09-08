@@ -1,5 +1,5 @@
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
-use terminal::Terminal;
+use terminal::{Position, Size, Terminal};
 mod terminal;
 use std::io::Error;
 
@@ -45,22 +45,22 @@ impl Editor {
         Terminal::hide_cursor()?;
         if self.should_quit {
             Terminal::clear_screen()?;
-            Terminal::print("Goodbye!\r\n");
+            Terminal::print("Goodbye!\r\n")?;
         } else {
             Self::draw_rows()?;
-            Terminal::move_cursor_to(0, 0)?;
+            Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
         }
         Terminal::show_cursor()?;
         Terminal::execute()?;
         Ok(())
     }
     fn draw_rows() -> Result<(), Error> {
-        let height = Terminal::size()?.1;
+        let Size { height, .. } = Terminal::size()?;
         for current_row in 0..height - 1 {
             let str = format!("~ {current_row}\r\n");
-            Terminal::print(&str);
+            Terminal::print(&str)?;
         }
-        Terminal::print("~");
+        Terminal::print("~")?;
         Ok(())
     }
 }
