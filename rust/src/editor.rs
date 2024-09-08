@@ -48,6 +48,7 @@ impl Editor {
             Self::draw_rows()?;
             Terminal::move_cursor_to(0, 0)?;
         }
+        Terminal::execute()?;
         Ok(())
     }
     fn draw_rows() -> Result<(), std::io::Error> {
