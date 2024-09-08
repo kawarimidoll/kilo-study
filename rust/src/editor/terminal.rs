@@ -1,5 +1,5 @@
 use crossterm::cursor::MoveTo;
-use crossterm::execute;
+use crossterm::queue;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
 use std::io::stdout;
 
@@ -17,11 +17,11 @@ impl Terminal {
         Ok(())
     }
     pub fn clear_screen() -> Result<(), std::io::Error> {
-        execute!(stdout(), Clear(ClearType::All))?;
+        queue!(stdout(), Clear(ClearType::All))?;
         Ok(())
     }
     pub fn move_cursor_to(x: u16, y: u16) -> Result<(), std::io::Error> {
-        execute!(stdout(), MoveTo(x, y))?;
+        queue!(stdout(), MoveTo(x, y))?;
         Ok(())
     }
     pub fn size() -> Result<(u16, u16), std::io::Error> {
