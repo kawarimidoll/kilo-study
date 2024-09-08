@@ -1,4 +1,4 @@
-use crossterm::cursor::MoveTo;
+use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::queue;
 use crossterm::style::Print;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
@@ -25,6 +25,14 @@ impl Terminal {
     }
     pub fn move_cursor_to(x: u16, y: u16) -> Result<(), std::io::Error> {
         queue!(stdout(), MoveTo(x, y))?;
+        Ok(())
+    }
+    pub fn hide_cursor() -> Result<(), std::io::Error> {
+        queue!(stdout(), Hide)?;
+        Ok(())
+    }
+    pub fn show_cursor() -> Result<(), std::io::Error> {
+        queue!(stdout(), Show)?;
         Ok(())
     }
     pub fn print(string: &str) -> Result<(), std::io::Error> {
