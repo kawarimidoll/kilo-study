@@ -34,6 +34,10 @@ impl Terminal {
         queue!(stdout(), Clear(ClearType::All))?;
         Ok(())
     }
+    pub fn clear_line() -> Result<(), Error> {
+        queue!(stdout(), Clear(ClearType::UntilNewLine))?;
+        Ok(())
+    }
     pub fn move_cursor_to(position: Position) -> Result<(), Error> {
         queue!(stdout(), MoveTo(position.x, position.y))?;
         Ok(())
