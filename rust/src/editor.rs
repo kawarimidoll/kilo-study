@@ -3,6 +3,9 @@ use terminal::{Position, Size, Terminal};
 mod terminal;
 use std::io::Error;
 
+const NAME: &str = "hecto";
+const VERSION: &str = "0.1.0";
+
 pub struct Editor {
     should_quit: bool,
 }
@@ -55,8 +58,13 @@ impl Editor {
         Ok(())
     }
     fn draw_rows() -> Result<(), Error> {
-        let Size { height, .. } = Terminal::size()?;
+        let Size { width, height } = Terminal::size()?;
         for current_row in 0..height - 1 {
+            if current_row == height / 3 {
+                let title = format!("{NAME} - {VERSION}");
+                let prefix = " ".repeat(((width - (title.len() as u16)) / 2).into());
+                Terminal::print(&format!("{prefix}{title}\r"))?;
+            }
             let str = format!("~ {current_row}\r\n");
             Terminal::print(&str)?;
         }
