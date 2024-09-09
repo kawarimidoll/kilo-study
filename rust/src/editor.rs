@@ -3,8 +3,8 @@ use terminal::{Position, Size, Terminal};
 mod terminal;
 use std::io::Error;
 
-const NAME: &str = "hecto";
-const VERSION: &str = "0.1.0";
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub struct Editor {
     should_quit: bool,
