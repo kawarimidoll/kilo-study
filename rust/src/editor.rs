@@ -61,7 +61,7 @@ impl Editor {
         let width = Terminal::size()?.width as usize;
 
         let title = format!("{NAME} editor -- version {VERSION}");
-        let padding = " ".repeat((width - title.len()) / 2);
+        let padding = " ".repeat(width.saturating_sub(title.len()) / 2);
         let mut message = format!("{padding}{title}");
         message.truncate(width);
         Terminal::print(format!("{message}\r"))?;
@@ -79,7 +79,7 @@ impl Editor {
                 Self::draw_welcome_message()?;
             }
             Self::draw_empty_row()?;
-            if current_row < height - 1 {
+            if current_row.saturating_add(1) < height {
                 // to ensure it works, add `.`
                 Terminal::print(".\r\n")?;
             }
