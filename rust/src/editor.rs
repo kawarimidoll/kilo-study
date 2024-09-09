@@ -1,5 +1,5 @@
 use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
-use terminal::{Position, Size, Terminal};
+use terminal::{Position, Terminal};
 mod terminal;
 use std::io::Error;
 
@@ -57,18 +57,33 @@ impl Editor {
         Terminal::execute()?;
         Ok(())
     }
-    fn draw_rows() -> Result<(), Error> {
-        let Size { width, height } = Terminal::size()?;
-        for current_row in 0..height - 1 {
-            if current_row == height / 3 {
-                let title = format!("{NAME} - {VERSION}");
-                let prefix = " ".repeat(((width - (title.len() as u16)) / 2).into());
-                Terminal::print(&format!("{prefix}{title}\r"))?;
-            }
-            let str = format!("~ {current_row}\r\n");
-            Terminal::print(&str)?;
-        }
+    fn draw_welcome_message() -> Result<(), Error> {
+        let width = Terminal::size()?.width as usize;
+
+        let title = format!("{NAME} editor -- version {VERSION}");
+        let padding = " ".repeat((width - title.len()) / 2);
+        let mut message = format!("{padding}{title}");
+        message.truncate(width);
+        Terminal::print(&format!("{message}\r"))?;
+        Ok(())
+    }
+    fn draw_empty_row() -> Result<(), Error> {
         Terminal::print("~")?;
+        Ok(())
+    }
+    fn draw_rows() -> Result<(), Error> {
+        let height = Terminal::size()?.height;
+        for current_row in 0..height {
+            Terminal::clear_line()?;
+            if current_row == height / 3 {
+                Self::draw_welcome_message()?;
+            }
+            Self::draw_empty_row()?;
+            if current_row < height - 1 {
+                // to ensure it works, add `.`
+                Terminal::print(".\r\n")?;
+            }
+        }
         Ok(())
     }
 }
