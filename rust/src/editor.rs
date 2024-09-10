@@ -9,11 +9,10 @@ use crossterm::event::{
 };
 use terminal::{Position, Size, Terminal};
 mod terminal;
+use view::View;
+mod view;
 use core::cmp::min;
 use std::io::Error;
-
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Copy, Clone, Default)]
 pub struct Location {
@@ -33,7 +32,6 @@ impl Location {
 #[derive(Default)]
 pub struct Editor {
     should_quit: bool,
-    message: usize,
     location: Location,
 }
 
@@ -86,7 +84,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
-            self.draw_rows()?;
+            View::render()?;
             Terminal::move_caret_to(self.location.as_potition())?;
         }
         Terminal::show_caret()?;
@@ -109,41 +107,6 @@ impl Editor {
             PageDown => self.location.y = max_y,
             _ => (),
         };
-        Ok(())
-    }
-    fn draw_welcome_message() -> Result<(), Error> {
-        let width = Terminal::size()?.width;
-
-        let title = format!("{NAME} editor -- version {VERSION}");
-        // we alow this since we don't care if our welcome message is put *exactly* in the middle.
-        // it's allowed to be a bit to the left or right.
-        #[allow(clippy::integer_division)]
-        let padding = " ".repeat(width.saturating_sub(title.len()) / 2);
-        let mut message = format!("{padding}{title}");
-        message.truncate(width);
-        Terminal::print(format!("{message}\r"))?;
-        Ok(())
-    }
-    fn draw_empty_row() -> Result<(), Error> {
-        Terminal::print("~")?;
-        Ok(())
-    }
-    fn draw_rows(&self) -> Result<(), Error> {
-        let height = Terminal::size()?.height;
-        for current_row in 0..height.saturating_add(1) {
-            Terminal::clear_line()?;
-            // we alow this since we don't care if our welcome message is put *exactly* in the middle.
-            // it's allowed to be a bit up or down
-            #[allow(clippy::integer_division)]
-            if current_row == height / 3 {
-                Self::draw_welcome_message()?;
-            }
-            Self::draw_empty_row()?;
-            // to ensure it works, add `.`
-            Terminal::print(".\r\n")?;
-        }
-        // Self::draw_empty_row()?;
-        Terminal::print(format!("{0}", self.message))?;
         Ok(())
     }
 }
