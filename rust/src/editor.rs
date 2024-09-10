@@ -4,6 +4,7 @@ use crossterm::event::{
     KeyCode::{self, Char, Down, End, Home, Left, PageDown, PageUp, Right, Up},
     // Backspace, Delete, Enter,
     KeyEvent,
+    KeyEventKind,
     KeyModifiers,
 };
 use terminal::{Position, Terminal};
@@ -35,20 +36,24 @@ impl Editor {
                 break;
             }
             let event = read()?;
-            self.evaluate_event(&event);
+            self.evaluate_event(&event)?;
         }
         Ok(())
     }
-    fn evaluate_event(&mut self, event: &Event) {
+    fn evaluate_event(&mut self, event: &Event) -> Result<(), Error> {
         if let Key(KeyEvent {
-            code, modifiers, ..
+            code,
+            modifiers,
+            // necessary for windows
+            kind: KeyEventKind::Press,
+            ..
         }) = event
         {
             match code {
                 Char('q') if *modifiers == KeyModifiers::CONTROL => self.should_quit = true,
 
                 Left | Down | Right | Up | Home | End | PageDown | PageUp => {
-                    self.move_position(*code);
+                    self.move_point(*code)?;
                 }
                 // Delete => self.message = 9,
                 // Backspace => self.message = 10,
@@ -56,6 +61,7 @@ impl Editor {
                 _ => (),
             }
         }
+        Ok(())
     }
     fn refresh_screen(&mut self) -> Result<(), Error> {
         Terminal::hide_caret()?;
@@ -71,7 +77,7 @@ impl Editor {
         Terminal::execute()?;
         Ok(())
     }
-    fn move_position(&mut self, code: KeyCode) -> Result<(), Error> {
+    fn move_point(&mut self, code: KeyCode) -> Result<(), Error> {
         match code {
             Left if self.position.x > 0 => self.position.x -= 1,
             Right if self.position.x < Terminal::size()?.width => self.position.x += 1,
