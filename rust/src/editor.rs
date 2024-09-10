@@ -58,9 +58,10 @@ impl Editor {
         Ok(())
     }
     fn draw_welcome_message() -> Result<(), Error> {
-        let width = Terminal::size()?.width as usize;
+        let width = Terminal::size()?.width;
 
         let title = format!("{NAME} editor -- version {VERSION}");
+        #[allow(clippy::integer_division)]
         let padding = " ".repeat(width.saturating_sub(title.len()) / 2);
         let mut message = format!("{padding}{title}");
         message.truncate(width);
@@ -75,6 +76,7 @@ impl Editor {
         let height = Terminal::size()?.height;
         for current_row in 0..height {
             Terminal::clear_line()?;
+            #[allow(clippy::integer_division)]
             if current_row == height / 3 {
                 Self::draw_welcome_message()?;
             }
