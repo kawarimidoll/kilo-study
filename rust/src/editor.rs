@@ -7,8 +7,9 @@ use crossterm::event::{
     KeyEventKind,
     KeyModifiers,
 };
-use terminal::{Position, Terminal};
+use terminal::{Position, Size, Terminal};
 mod terminal;
+use core::cmp::min;
 use std::io::Error;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -78,15 +79,19 @@ impl Editor {
         Ok(())
     }
     fn move_point(&mut self, code: KeyCode) -> Result<(), Error> {
+        let Position { x, y } = self.position;
+        let Size { width, height } = Terminal::size()?;
+        let max_x = width.saturating_sub(1);
+        let max_y = height.saturating_sub(1);
         match code {
-            Left if self.position.x > 0 => self.position.x -= 1,
-            Right if self.position.x < Terminal::size()?.width => self.position.x += 1,
-            Up if self.position.y > 0 => self.position.y -= 1,
-            Down if self.position.y < Terminal::size()?.height => self.position.y += 1,
+            Left => self.position.x = x.saturating_sub(1),
+            Right => self.position.x = min(max_x, x.saturating_add(1)),
+            Up => self.position.y = y.saturating_sub(1),
+            Down => self.position.y = min(max_y, y.saturating_add(1)),
             Home => self.position.x = 0,
-            End => self.position.x = Terminal::size()?.width,
+            End => self.position.x = max_x,
             PageUp => self.position.y = 0,
-            PageDown => self.position.y = Terminal::size()?.height,
+            PageDown => self.position.y = max_y,
             _ => (),
         };
         Ok(())
