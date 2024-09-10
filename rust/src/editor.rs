@@ -13,6 +13,7 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[derive(Default)]
 pub struct Editor {
     should_quit: bool,
     message: usize,
@@ -20,14 +21,6 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub const fn default() -> Self {
-        Self {
-            should_quit: false,
-            message: 0,
-            position: Position { x: 0, y: 0 },
-        }
-    }
-
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
         let result = self.repl();
@@ -68,7 +61,7 @@ impl Editor {
         Terminal::hide_caret()?;
         if self.should_quit {
             Terminal::clear_screen()?;
-            Terminal::move_caret_to(Position { x: 0, y: 0 })?;
+            Terminal::move_caret_to(Position::default())?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
             self.draw_rows()?;

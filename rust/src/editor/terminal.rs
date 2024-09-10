@@ -10,7 +10,7 @@ pub struct Size {
     pub width: usize,
     pub height: usize,
 }
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Default)]
 pub struct Position {
     // the position of the screen
     pub x: usize,
