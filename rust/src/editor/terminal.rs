@@ -12,6 +12,7 @@ pub struct Size {
 }
 #[derive(Copy, Clone)]
 pub struct Position {
+    // the position of the screen
     pub x: usize,
     pub y: usize,
 }
@@ -33,7 +34,6 @@ impl Terminal {
     pub fn initialize() -> Result<(), Error> {
         enable_raw_mode()?;
         Self::clear_screen()?;
-        Self::move_cursor_to(Position { x: 0, y: 0 })?;
         Self::execute()?;
         Ok(())
     }
