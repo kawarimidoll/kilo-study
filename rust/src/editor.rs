@@ -76,7 +76,7 @@ impl Editor {
     }
     fn draw_rows() -> Result<(), Error> {
         let height = Terminal::size()?.height;
-        for current_row in 0..height {
+        for current_row in 0..height.saturating_add(1) {
             Terminal::clear_line()?;
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
@@ -85,11 +85,10 @@ impl Editor {
                 Self::draw_welcome_message()?;
             }
             Self::draw_empty_row()?;
-            if current_row.saturating_add(1) < height {
-                // to ensure it works, add `.`
-                Terminal::print(".\r\n")?;
-            }
+            // to ensure it works, add `.`
+            Terminal::print(".\r\n")?;
         }
+        Self::draw_empty_row()?;
         Ok(())
     }
 }
