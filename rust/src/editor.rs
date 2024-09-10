@@ -1,4 +1,9 @@
-use crossterm::event::{read, Event, Event::Key, KeyCode::Char, KeyEvent, KeyModifiers};
+use crossterm::event::{
+    read,
+    Event::{self, Key},
+    KeyCode::{Backspace, Char, Delete, Down, End, Enter, Home, Left, PageDown, PageUp, Right, Up},
+    KeyEvent, KeyModifiers,
+};
 use terminal::{Position, Terminal};
 mod terminal;
 use std::io::Error;
@@ -8,11 +13,15 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub struct Editor {
     should_quit: bool,
+    message: usize,
 }
 
 impl Editor {
     pub const fn default() -> Self {
-        Self { should_quit: false }
+        Self {
+            should_quit: false,
+            message: 0,
+        }
     }
 
     pub fn run(&mut self) {
@@ -40,6 +49,19 @@ impl Editor {
         {
             match code {
                 Char('q') if *modifiers == KeyModifiers::CONTROL => self.should_quit = true,
+
+                Left => self.message = 1,
+                Down => self.message = 2,
+                Right => self.message = 3,
+                Up => self.message = 4,
+                Home => self.message = 5,
+                End => self.message = 6,
+                PageDown => self.message = 7,
+                PageUp => self.message = 8,
+                Delete => self.message = 9,
+                Backspace => self.message = 10,
+                Enter => self.message = 11,
+
                 _ => (),
             }
         }
@@ -50,7 +72,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
-            Self::draw_rows()?;
+            self.draw_rows()?;
             Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
         }
         Terminal::show_cursor()?;
@@ -74,7 +96,7 @@ impl Editor {
         Terminal::print("~")?;
         Ok(())
     }
-    fn draw_rows() -> Result<(), Error> {
+    fn draw_rows(&self) -> Result<(), Error> {
         let height = Terminal::size()?.height;
         for current_row in 0..height.saturating_add(1) {
             Terminal::clear_line()?;
@@ -88,7 +110,8 @@ impl Editor {
             // to ensure it works, add `.`
             Terminal::print(".\r\n")?;
         }
-        Self::draw_empty_row()?;
+        // Self::draw_empty_row()?;
+        Terminal::print(format!("{0}", self.message))?;
         Ok(())
     }
 }
