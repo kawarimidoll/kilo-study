@@ -27,7 +27,7 @@ impl View {
     pub fn render() -> Result<(), Error> {
         // render function
         let height = Terminal::size()?.height;
-        for current_row in 0..height.saturating_add(1) {
+        for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
