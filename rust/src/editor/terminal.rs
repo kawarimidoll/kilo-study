@@ -22,7 +22,7 @@ pub struct Position {
 /// Regardless of the actual size of the Terminal, this representation only spans ofer as most
 /// `usize::MAX` or `u16::size` rows / colmuns, whichever is smaler.
 /// Each size returned truncates to min(`usize::MAX`, `u16::size`)
-/// And should you attempt to set the cursor out of those bounds, it will also be truncated.
+/// And should you attempt to set the caret out of those bounds, it will also be truncated.
 pub struct Terminal;
 
 impl Terminal {
@@ -45,20 +45,20 @@ impl Terminal {
         Self::queue_command(Clear(ClearType::UntilNewLine))?;
         Ok(())
     }
-    /// Moves the cursor to the given Position.
+    /// Moves the caret to the given Position.
     /// # Arguments
-    /// * `Position` - the `Poisition` to move the cursor to. Will be truncated to `u16::MAX` if
+    /// * `Position` - the `Poisition` to move the caret to. Will be truncated to `u16::MAX` if
     ///   bitter.
-    pub fn move_cursor_to(position: Position) -> Result<(), Error> {
+    pub fn move_caret_to(position: Position) -> Result<(), Error> {
         #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
         Self::queue_command(MoveTo(position.x as u16, position.y as u16))?;
         Ok(())
     }
-    pub fn hide_cursor() -> Result<(), Error> {
+    pub fn hide_caret() -> Result<(), Error> {
         Self::queue_command(Hide)?;
         Ok(())
     }
-    pub fn show_cursor() -> Result<(), Error> {
+    pub fn show_caret() -> Result<(), Error> {
         Self::queue_command(Show)?;
         Ok(())
     }

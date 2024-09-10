@@ -65,16 +65,16 @@ impl Editor {
         }
     }
     fn refresh_screen(&mut self) -> Result<(), Error> {
-        Terminal::hide_cursor()?;
+        Terminal::hide_caret()?;
         if self.should_quit {
             Terminal::clear_screen()?;
-            Terminal::move_cursor_to(Position { x: 0, y: 0 })?;
+            Terminal::move_caret_to(Position { x: 0, y: 0 })?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
             self.draw_rows()?;
-            Terminal::move_cursor_to(self.position)?;
+            Terminal::move_caret_to(self.position)?;
         }
-        Terminal::show_cursor()?;
+        Terminal::show_caret()?;
         Terminal::execute()?;
         Ok(())
     }
