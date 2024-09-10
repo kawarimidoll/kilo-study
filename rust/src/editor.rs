@@ -15,11 +15,26 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+#[derive(Copy, Clone, Default)]
+pub struct Location {
+    // the position of the document
+    pub x: usize,
+    pub y: usize,
+}
+impl Location {
+    pub fn as_potition(&self) -> Position {
+        Position {
+            col: self.x,
+            row: self.y,
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct Editor {
     should_quit: bool,
     message: usize,
-    position: Position,
+    location: Location,
 }
 
 impl Editor {
@@ -72,26 +87,26 @@ impl Editor {
             Terminal::print("Goodbye!\r\n")?;
         } else {
             self.draw_rows()?;
-            Terminal::move_caret_to(self.position)?;
+            Terminal::move_caret_to(self.location.as_potition())?;
         }
         Terminal::show_caret()?;
         Terminal::execute()?;
         Ok(())
     }
     fn move_point(&mut self, code: KeyCode) -> Result<(), Error> {
-        let Position { x, y } = self.position;
+        let Location { x, y } = self.location;
         let Size { width, height } = Terminal::size()?;
         let max_x = width.saturating_sub(1);
         let max_y = height.saturating_sub(1);
         match code {
-            Left => self.position.x = x.saturating_sub(1),
-            Right => self.position.x = min(max_x, x.saturating_add(1)),
-            Up => self.position.y = y.saturating_sub(1),
-            Down => self.position.y = min(max_y, y.saturating_add(1)),
-            Home => self.position.x = 0,
-            End => self.position.x = max_x,
-            PageUp => self.position.y = 0,
-            PageDown => self.position.y = max_y,
+            Left => self.location.x = x.saturating_sub(1),
+            Right => self.location.x = min(max_x, x.saturating_add(1)),
+            Up => self.location.y = y.saturating_sub(1),
+            Down => self.location.y = min(max_y, y.saturating_add(1)),
+            Home => self.location.x = 0,
+            End => self.location.x = max_x,
+            PageUp => self.location.y = 0,
+            PageDown => self.location.y = max_y,
             _ => (),
         };
         Ok(())

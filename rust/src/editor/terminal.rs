@@ -13,8 +13,8 @@ pub struct Size {
 #[derive(Copy, Clone, Default)]
 pub struct Position {
     // the position of the screen
-    pub x: usize,
-    pub y: usize,
+    pub col: usize,
+    pub row: usize,
 }
 
 /// Represents the Terminal.
@@ -51,7 +51,7 @@ impl Terminal {
     ///   bitter.
     pub fn move_caret_to(position: Position) -> Result<(), Error> {
         #[allow(clippy::as_conversions, clippy::cast_possible_truncation)]
-        Self::queue_command(MoveTo(position.x as u16, position.y as u16))?;
+        Self::queue_command(MoveTo(position.col as u16, position.row as u16))?;
         Ok(())
     }
     pub fn hide_caret() -> Result<(), Error> {
