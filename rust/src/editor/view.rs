@@ -9,6 +9,7 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub struct View {
     pub buffer: Buffer,
     pub needs_redraw: bool,
+    pub size: Size,
 }
 
 impl Default for View {
@@ -16,6 +17,7 @@ impl Default for View {
         Self {
             buffer: Buffer::default(),
             needs_redraw: true,
+            size: Terminal::size().unwrap_or_default(),
         }
     }
 }
@@ -27,16 +29,14 @@ impl View {
             self.needs_redraw = true;
         }
     }
-    fn draw_welcome_message() -> Result<(), Error> {
-        let Size { width, height } = Terminal::size()?;
-
+    fn draw_welcome_message(&self) -> Result<(), Error> {
         let mut title = format!("{NAME} editor -- version {VERSION}");
         // we don't care if our welcome message is put *exactly* in the middle.
         #[allow(clippy::integer_division)]
-        let row = height / 3;
+        let row = self.size.height / 3;
         #[allow(clippy::integer_division)]
-        let col = width.saturating_sub(title.len()) / 2;
-        title.truncate(width - col);
+        let col = self.size.width.saturating_sub(title.len()) / 2;
+        title.truncate(self.size.width.saturating_sub(col));
         Terminal::move_caret_to(Position { col, row })?;
         Terminal::print(&title)?;
         Ok(())
@@ -45,9 +45,8 @@ impl View {
         Terminal::print("~")?;
         Ok(())
     }
-    pub fn render_welcome_screen() -> Result<(), Error> {
-        let height = Terminal::size()?.height;
-        for current_row in 0..height.saturating_sub(1) {
+    pub fn render_welcome_screen(&self) -> Result<(), Error> {
+        for current_row in 0..self.size.height.saturating_sub(1) {
             Terminal::move_caret_to(Position {
                 col: 0,
                 row: current_row,
@@ -55,12 +54,11 @@ impl View {
             Terminal::clear_line()?;
             Self::draw_empty_row()?;
         }
-        Self::draw_welcome_message()?;
+        self.draw_welcome_message()?;
         Ok(())
     }
     pub fn render_buffer(&self) -> Result<(), Error> {
-        let Size { width, height } = Terminal::size()?;
-        for current_row in 0..height.saturating_sub(1) {
+        for current_row in 0..self.size.height.saturating_sub(1) {
             Terminal::move_caret_to(Position {
                 col: 0,
                 row: current_row,
@@ -68,7 +66,7 @@ impl View {
             Terminal::clear_line()?;
             if let Some(line) = self.buffer.lines.get(current_row) {
                 let mut l = String::from(line);
-                l.truncate(width);
+                l.truncate(self.size.width);
                 Terminal::print(&l)?;
             } else {
                 Self::draw_empty_row()?;
@@ -82,13 +80,13 @@ impl View {
             return Ok(());
         }
         if self.buffer.is_empty() {
-            Self::render_welcome_screen()?;
+            self.render_welcome_screen()?;
         } else {
             self.render_buffer()?;
         }
         Terminal::move_caret_to(Position {
             col: 0,
-            row: Terminal::size()?.height.saturating_sub(1),
+            row: self.size.height.saturating_sub(1),
         })?;
         // here comes status line
         Terminal::print("--------")?;
