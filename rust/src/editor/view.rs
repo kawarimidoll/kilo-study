@@ -1,6 +1,6 @@
 use buffer::Buffer;
 mod buffer;
-use super::terminal::Terminal;
+use super::terminal::{Position, Terminal};
 use std::io::Error;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -37,6 +37,10 @@ impl View {
     pub fn render_welcome_screen() -> Result<(), Error> {
         let height = Terminal::size()?.height;
         for current_row in 0..height.saturating_sub(1) {
+            Terminal::move_caret_to(Position {
+                col: 0,
+                row: current_row,
+            })?;
             Terminal::clear_line()?;
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
@@ -45,21 +49,22 @@ impl View {
                 Self::draw_welcome_message()?;
             }
             Self::draw_empty_row()?;
-            // to ensure it works, add `.`
-            Terminal::print(".\r\n")?;
         }
         Ok(())
     }
     pub fn render_buffer(&self) -> Result<(), Error> {
         let height = Terminal::size()?.height;
         for current_row in 0..height.saturating_sub(1) {
+            Terminal::move_caret_to(Position {
+                col: 0,
+                row: current_row,
+            })?;
             Terminal::clear_line()?;
             if let Some(line) = self.buffer.lines.get(current_row) {
                 Terminal::print(line)?;
             } else {
                 Self::draw_empty_row()?;
             }
-            Terminal::print("\r\n")?;
         }
         Ok(())
     }
@@ -70,6 +75,10 @@ impl View {
         } else {
             self.render_buffer()?;
         }
+        Terminal::move_caret_to(Position {
+            col: 0,
+            row: Terminal::size()?.height.saturating_sub(1),
+        })?;
         // here comes status line
         Terminal::print("--------")?;
         Ok(())
