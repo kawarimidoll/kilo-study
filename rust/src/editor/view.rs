@@ -28,16 +28,17 @@ impl View {
         }
     }
     fn draw_welcome_message() -> Result<(), Error> {
-        let width = Terminal::size()?.width;
+        let Size { width, height } = Terminal::size()?;
 
-        let title = format!("{NAME} editor -- version {VERSION}");
-        // we alow this since we don't care if our welcome message is put *exactly* in the middle.
-        // it's allowed to be a bit to the left or right.
+        let mut title = format!("{NAME} editor -- version {VERSION}");
+        // we don't care if our welcome message is put *exactly* in the middle.
         #[allow(clippy::integer_division)]
-        let padding = " ".repeat(width.saturating_sub(title.len()) / 2);
-        let mut message = format!("{padding}{title}");
-        message.truncate(width);
-        Terminal::print(&format!("{message}\r"))?;
+        let row = height / 3;
+        #[allow(clippy::integer_division)]
+        let col = width.saturating_sub(title.len()) / 2;
+        title.truncate(width - col);
+        Terminal::move_caret_to(Position { col, row })?;
+        Terminal::print(&title)?;
         Ok(())
     }
     fn draw_empty_row() -> Result<(), Error> {
@@ -52,14 +53,9 @@ impl View {
                 row: current_row,
             })?;
             Terminal::clear_line()?;
-            // we alow this since we don't care if our welcome message is put *exactly* in the middle.
-            // it's allowed to be a bit up or down
-            #[allow(clippy::integer_division)]
-            if current_row == height / 3 {
-                Self::draw_welcome_message()?;
-            }
             Self::draw_empty_row()?;
         }
+        Self::draw_welcome_message()?;
         Ok(())
     }
     pub fn render_buffer(&self) -> Result<(), Error> {
