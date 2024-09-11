@@ -34,15 +34,23 @@ impl View {
         }
     }
     fn draw_welcome_message(&self) -> Result<(), Error> {
-        let mut title = format!("{NAME} editor -- version {VERSION}");
+        let messages = vec![
+            "Welcome!".to_string(),
+            format!("{NAME} editor -- version {VERSION}"),
+        ];
+
         // we don't care if our welcome message is put *exactly* in the middle.
         #[allow(clippy::integer_division)]
-        let row = self.size.height / 3;
-        #[allow(clippy::integer_division)]
-        let col = self.size.width.saturating_sub(title.len()) / 2;
-        title.truncate(self.size.width.saturating_sub(col));
-        Terminal::move_caret_to(Position { col, row })?;
-        Terminal::print(&title)?;
+        let mut row = self.size.height / 3;
+        for mut message in messages {
+            #[allow(clippy::integer_division)]
+            let col = self.size.width.saturating_sub(message.len()) / 2;
+            message.truncate(self.size.width.saturating_sub(col));
+            Terminal::move_caret_to(Position { col, row })?;
+            Terminal::print(&message)?;
+            row = row.saturating_add(1);
+        }
+
         Ok(())
     }
     fn draw_empty_row() -> Result<(), Error> {
