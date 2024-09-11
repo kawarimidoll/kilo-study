@@ -1,14 +1,32 @@
+use crossterm::event::KeyCode;
+use core::cmp::min;
 use buffer::Buffer;
 mod buffer;
-use super::terminal::{Size, Terminal};
+use super::terminal::{Position, Size, Terminal};
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Copy, Clone, Default)]
+pub struct Location {
+    // the position of the document
+    pub x: usize,
+    pub y: usize,
+}
+impl Location {
+    pub fn as_potition(&self) -> Position {
+        Position {
+            col: self.x,
+            row: self.y,
+        }
+    }
+}
 
 pub struct View {
     pub buffer: Buffer,
     pub needs_redraw: bool,
     pub size: Size,
+    pub location: Location,
 }
 
 impl Default for View {
@@ -17,6 +35,7 @@ impl Default for View {
             buffer: Buffer::default(),
             needs_redraw: true,
             size: Terminal::size().unwrap_or_default(),
+            location: Location::default(),
         }
     }
 }
@@ -70,6 +89,7 @@ impl View {
         if !self.needs_redraw || self.size.width == 0 || self.size.height == 0 {
             return;
         }
+        let _ = Terminal::move_caret_to(Position::default());
         self.render_buffer();
         if self.buffer.is_empty() {
             self.draw_welcome_message();
@@ -77,5 +97,23 @@ impl View {
         // here comes status line
         Self::render_line(self.size.height.saturating_sub(1), "--------");
         self.needs_redraw = false;
+    }
+
+    pub fn move_point(&mut self, code: KeyCode) {
+        let Location { x, y } = self.location;
+        let Size { width, height } = Terminal::size().unwrap_or_default();
+        let max_x = width.saturating_sub(1);
+        let max_y = height.saturating_sub(1);
+        match code {
+            KeyCode::Left => self.location.x = x.saturating_sub(1),
+            KeyCode::Right => self.location.x = min(max_x, x.saturating_add(1)),
+            KeyCode::Up => self.location.y = y.saturating_sub(1),
+            KeyCode::Down => self.location.y = min(max_y, y.saturating_add(1)),
+            KeyCode::Home => self.location.x = 0,
+            KeyCode::End => self.location.x = max_x,
+            KeyCode::PageUp => self.location.y = 0,
+            KeyCode::PageDown => self.location.y = max_y,
+            _ => (),
+        };
     }
 }

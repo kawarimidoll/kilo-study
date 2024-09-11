@@ -1,37 +1,20 @@
 use crossterm::event::{
     read,
     Event::{self, Key},
-    KeyCode::{self, Char, Down, End, Home, Left, PageDown, PageUp, Right, Up},
+    KeyCode::{Char, Down, End, Home, Left, PageDown, PageUp, Right, Up},
     // Backspace, Delete, Enter,
     KeyEvent,
     KeyEventKind,
     KeyModifiers,
 };
-use terminal::{Position, Size, Terminal};
+use terminal::{Size, Terminal};
 mod terminal;
 use view::View;
 mod view;
-use core::cmp::min;
 use std::io::Error;
-
-#[derive(Copy, Clone, Default)]
-pub struct Location {
-    // the position of the document
-    pub x: usize,
-    pub y: usize,
-}
-impl Location {
-    pub fn as_potition(&self) -> Position {
-        Position {
-            col: self.x,
-            row: self.y,
-        }
-    }
-}
 
 pub struct Editor {
     should_quit: bool,
-    location: Location,
     view: View,
 }
 
@@ -51,7 +34,6 @@ impl Editor {
         }
         Ok(Self {
             should_quit: false,
-            location: Location::default(),
             view,
         })
     }
@@ -88,8 +70,9 @@ impl Editor {
                 (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
 
                 (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                    self.move_point(code);
+                    self.view.move_point(code);
                 }
+
                 _ => (),
             },
             Event::Resize(width16, height16) => {
@@ -104,28 +87,10 @@ impl Editor {
     }
     fn refresh_screen(&mut self) {
         let _ = Terminal::hide_caret();
-        let _ = Terminal::move_caret_to(Position::default());
         self.view.render();
-        let _ = Terminal::move_caret_to(self.location.as_potition());
+        let _ = Terminal::move_caret_to(self.view.location.as_potition());
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();
-    }
-    fn move_point(&mut self, code: KeyCode) {
-        let Location { x, y } = self.location;
-        let Size { width, height } = Terminal::size().unwrap_or_default();
-        let max_x = width.saturating_sub(1);
-        let max_y = height.saturating_sub(1);
-        match code {
-            Left => self.location.x = x.saturating_sub(1),
-            Right => self.location.x = min(max_x, x.saturating_add(1)),
-            Up => self.location.y = y.saturating_sub(1),
-            Down => self.location.y = min(max_y, y.saturating_add(1)),
-            Home => self.location.x = 0,
-            End => self.location.x = max_x,
-            PageUp => self.location.y = 0,
-            PageDown => self.location.y = max_y,
-            _ => (),
-        };
     }
 }
 
