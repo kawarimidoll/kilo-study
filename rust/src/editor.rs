@@ -101,7 +101,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
-            self.view.render()?;
+            self.view.render();
             Terminal::move_caret_to(self.location.as_potition())?;
         }
         Terminal::show_caret()?;

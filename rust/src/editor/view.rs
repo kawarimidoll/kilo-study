@@ -1,7 +1,6 @@
 use buffer::Buffer;
 mod buffer;
-use super::terminal::{Position, Size, Terminal};
-use std::io::Error;
+use super::terminal::{Size, Terminal};
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -33,7 +32,7 @@ impl View {
             self.needs_redraw = true;
         }
     }
-    fn draw_welcome_message(&self) -> Result<(), Error> {
+    fn draw_welcome_message(&self) {
         let messages = vec![
             "Welcome!".to_string(),
             format!("{NAME} editor -- version {VERSION}"),
@@ -45,44 +44,38 @@ impl View {
         for mut message in messages {
             #[allow(clippy::integer_division)]
             let col = self.size.width.saturating_sub(message.len()) / 2;
-            message.truncate(self.size.width.saturating_sub(col));
-            Terminal::move_caret_to(Position { col, row })?;
-            Terminal::print(&message)?;
+            message = format!("~{}{}", " ".repeat(col), message);
+            message.truncate(self.size.width.saturating_sub(1));
+            Self::render_line(row, &message);
             row = row.saturating_add(1);
         }
-
-        Ok(())
     }
-    fn render_line(row: usize, line_text: &str) -> Result<(), Error> {
-        Terminal::move_caret_to(Position { col: 0, row })?;
-        Terminal::clear_line()?;
-        Terminal::print(line_text)?;
-        Ok(())
+    fn render_line(row: usize, line_text: &str) {
+        let result = Terminal::print_row(row, line_text);
+        debug_assert!(result.is_ok(), "Failed to render line");
     }
-    pub fn render_buffer(&self) -> Result<(), Error> {
+    pub fn render_buffer(&self) {
         for current_row in 0..self.size.height.saturating_sub(1) {
             if let Some(line) = self.buffer.lines.get(current_row) {
                 let mut l = String::from(line);
                 l.truncate(self.size.width);
-                Self::render_line(current_row, &l)?;
+                Self::render_line(current_row, &l);
             } else {
-                Self::render_line(current_row, "~")?;
+                Self::render_line(current_row, "~");
             }
         }
-        Ok(())
     }
-    pub fn render(&mut self) -> Result<(), Error> {
+    pub fn render(&mut self) {
         // render function
         if !self.needs_redraw || self.size.width == 0 || self.size.height == 0 {
-            return Ok(());
+            return;
         }
-        self.render_buffer()?;
+        self.render_buffer();
         if self.buffer.is_empty() {
-            self.draw_welcome_message()?;
+            self.draw_welcome_message();
         }
         // here comes status line
-        Self::render_line(self.size.height.saturating_sub(1), "--------")?;
+        Self::render_line(self.size.height.saturating_sub(1), "--------");
         self.needs_redraw = false;
-        Ok(())
     }
 }

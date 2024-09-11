@@ -70,6 +70,12 @@ impl Terminal {
         Self::queue_command(Print(string))?;
         Ok(())
     }
+    pub fn print_row(row: usize, line_text: &str) -> Result<(), Error> {
+        Self::move_caret_to(Position { col: 0, row })?;
+        Self::clear_line()?;
+        Self::print(line_text)?;
+        Ok(())
+    }
     /// Returns the current size of this Terminal.
     /// Edge Case for systems with `usize` < `u16`
     /// * A `Size` representing the terminal size. Any coordinate `z` truncated with `usize` < `z`
