@@ -65,25 +65,24 @@ impl Editor {
         Ok(())
     }
     fn evaluate_event(&mut self, event: &Event) -> Result<(), Error> {
-        if let Key(KeyEvent {
-            code,
-            modifiers,
-            // necessary for windows
-            kind: KeyEventKind::Press,
-            ..
-        }) = event
-        {
-            match code {
-                Char('q') if *modifiers == KeyModifiers::CONTROL => self.should_quit = true,
+        match event {
+            Key(KeyEvent {
+                code,
+                modifiers,
+                // necessary for windows
+                kind: KeyEventKind::Press,
+                ..
+            }) => {
+                match (code, modifiers) {
+                    (Char('q'), &KeyModifiers::CONTROL) => self.should_quit = true,
 
-                Left | Down | Right | Up | Home | End | PageDown | PageUp => {
-                    self.move_point(*code)?;
+                    (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
+                        self.move_point(*code)?;
+                    }
+                    _ => (),
                 }
-                // Delete => self.message = 9,
-                // Backspace => self.message = 10,
-                // Enter => self.message = 11,
-                _ => (),
             }
+            _ => (),
         }
         Ok(())
     }
