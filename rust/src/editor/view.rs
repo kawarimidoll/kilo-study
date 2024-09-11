@@ -4,9 +4,16 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Default)]
 pub struct Buffer {
     pub contents: Vec<String>,
+}
+
+impl Default for Buffer {
+    fn default() -> Self {
+        let mut contents = Vec::new();
+        contents.push(String::from("Hello world"));
+        Self { contents }
+    }
 }
 
 impl Buffer {

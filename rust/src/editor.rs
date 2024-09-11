@@ -38,7 +38,6 @@ pub struct Editor {
 
 impl Editor {
     pub fn run(&mut self) {
-        self.view.buffer.contents.push(String::from("Hello world"));
         Terminal::initialize().unwrap();
         let result = self.repl();
         Terminal::terminate().unwrap();
