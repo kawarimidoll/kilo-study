@@ -60,7 +60,7 @@ impl Editor {
                 break;
             }
             let event = read()?;
-            self.evaluate_event(event)?;
+            self.evaluate_event(event);
         }
         Ok(())
     }
@@ -68,7 +68,7 @@ impl Editor {
     // needless_pass_by_value: Event is not huge, so there is not a performance overhead in passing
     // by value, and pattern matching on it is more ergonomic.
     #[allow(clippy::needless_pass_by_value)]
-    fn evaluate_event(&mut self, event: Event) -> Result<(), Error> {
+    fn evaluate_event(&mut self, event: Event) {
         match event {
             Key(KeyEvent {
                 code,
@@ -80,7 +80,7 @@ impl Editor {
                 (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
 
                 (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                    self.move_point(code)?;
+                    self.move_point(code);
                 }
                 _ => (),
             },
@@ -93,7 +93,6 @@ impl Editor {
             }
             _ => (),
         }
-        Ok(())
     }
     fn refresh_screen(&mut self) -> Result<(), Error> {
         Terminal::hide_caret()?;
@@ -109,9 +108,9 @@ impl Editor {
         Terminal::execute()?;
         Ok(())
     }
-    fn move_point(&mut self, code: KeyCode) -> Result<(), Error> {
+    fn move_point(&mut self, code: KeyCode) {
         let Location { x, y } = self.location;
-        let Size { width, height } = Terminal::size()?;
+        let Size { width, height } = Terminal::size().unwrap_or_default();
         let max_x = width.saturating_sub(1);
         let max_y = height.saturating_sub(1);
         match code {
@@ -125,6 +124,5 @@ impl Editor {
             PageDown => self.location.y = max_y,
             _ => (),
         };
-        Ok(())
     }
 }
