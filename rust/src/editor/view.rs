@@ -53,35 +53,20 @@ impl View {
 
         Ok(())
     }
-    fn draw_empty_row() -> Result<(), Error> {
-        Terminal::print("~")?;
-        Ok(())
-    }
-    pub fn render_welcome_screen(&self) -> Result<(), Error> {
-        for current_row in 0..self.size.height.saturating_sub(1) {
-            Terminal::move_caret_to(Position {
-                col: 0,
-                row: current_row,
-            })?;
-            Terminal::clear_line()?;
-            Self::draw_empty_row()?;
-        }
-        self.draw_welcome_message()?;
+    fn render_line(row: usize, line_text: &str) -> Result<(), Error> {
+        Terminal::move_caret_to(Position { col: 0, row })?;
+        Terminal::clear_line()?;
+        Terminal::print(line_text)?;
         Ok(())
     }
     pub fn render_buffer(&self) -> Result<(), Error> {
         for current_row in 0..self.size.height.saturating_sub(1) {
-            Terminal::move_caret_to(Position {
-                col: 0,
-                row: current_row,
-            })?;
-            Terminal::clear_line()?;
             if let Some(line) = self.buffer.lines.get(current_row) {
                 let mut l = String::from(line);
                 l.truncate(self.size.width);
-                Terminal::print(&l)?;
+                Self::render_line(current_row, &l)?;
             } else {
-                Self::draw_empty_row()?;
+                Self::render_line(current_row, "~")?;
             }
         }
         Ok(())
@@ -91,17 +76,12 @@ impl View {
         if !self.needs_redraw || self.size.width == 0 || self.size.height == 0 {
             return Ok(());
         }
+        self.render_buffer()?;
         if self.buffer.is_empty() {
-            self.render_welcome_screen()?;
-        } else {
-            self.render_buffer()?;
+            self.draw_welcome_message()?;
         }
-        Terminal::move_caret_to(Position {
-            col: 0,
-            row: self.size.height.saturating_sub(1),
-        })?;
         // here comes status line
-        Terminal::print("--------")?;
+        Self::render_line(self.size.height.saturating_sub(1), "--------")?;
         self.needs_redraw = false;
         Ok(())
     }
