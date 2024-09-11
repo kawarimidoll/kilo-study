@@ -35,8 +35,8 @@ impl View {
         // Terminal::print("Hello World!\r\n")?;
         for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
-            if current_row < self.buffer.len() {
-                Terminal::print(&self.buffer.lines[current_row])?;
+            if let Some(line) = self.buffer.lines.get(current_row) {
+                Terminal::print(line)?;
                 Terminal::print(".\r\n")?;
                 continue;
             }
