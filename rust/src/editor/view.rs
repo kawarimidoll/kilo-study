@@ -1,6 +1,6 @@
 use buffer::Buffer;
 mod buffer;
-use super::terminal::{Position, Terminal};
+use super::terminal::{Position, Size, Terminal};
 use std::io::Error;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -53,7 +53,7 @@ impl View {
         Ok(())
     }
     pub fn render_buffer(&self) -> Result<(), Error> {
-        let height = Terminal::size()?.height;
+        let Size { width, height } = Terminal::size()?;
         for current_row in 0..height.saturating_sub(1) {
             Terminal::move_caret_to(Position {
                 col: 0,
@@ -61,7 +61,9 @@ impl View {
             })?;
             Terminal::clear_line()?;
             if let Some(line) = self.buffer.lines.get(current_row) {
-                Terminal::print(line)?;
+                let mut l = String::from(line);
+                l.truncate(width);
+                Terminal::print(&l)?;
             } else {
                 Self::draw_empty_row()?;
             }
