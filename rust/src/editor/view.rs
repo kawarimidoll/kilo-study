@@ -17,7 +17,7 @@ impl View {
         let padding = " ".repeat(width.saturating_sub(title.len()) / 2);
         let mut message = format!("{padding}{title}");
         message.truncate(width);
-        Terminal::print(format!("{message}\r"))?;
+        Terminal::print(&format!("{message}\r"))?;
         Ok(())
     }
     fn draw_empty_row() -> Result<(), Error> {
