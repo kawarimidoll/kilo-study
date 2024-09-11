@@ -9,12 +9,14 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Default)]
 pub struct View {
     pub buffer: Buffer,
+    pub needs_redraw: bool,
 }
 
 impl View {
     pub fn load(&mut self, filename: &str) {
         if let Ok(buffer) = Buffer::load(filename) {
             self.buffer = buffer;
+            self.needs_redraw = true;
         }
     }
     fn draw_welcome_message() -> Result<(), Error> {
@@ -70,8 +72,11 @@ impl View {
         }
         Ok(())
     }
-    pub fn render(&self) -> Result<(), Error> {
+    pub fn render(&mut self) -> Result<(), Error> {
         // render function
+        if !self.needs_redraw {
+            return Ok(());
+        }
         if self.buffer.is_empty() {
             Self::render_welcome_screen()?;
         } else {
@@ -83,6 +88,7 @@ impl View {
         })?;
         // here comes status line
         Terminal::print("--------")?;
+        self.needs_redraw = false;
         Ok(())
     }
 }
