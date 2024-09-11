@@ -72,15 +72,20 @@ impl Editor {
                 // necessary for windows
                 kind: KeyEventKind::Press,
                 ..
-            }) => {
-                match (code, modifiers) {
-                    (Char('q'), &KeyModifiers::CONTROL) => self.should_quit = true,
+            }) => match (code, modifiers) {
+                (Char('q'), &KeyModifiers::CONTROL) => self.should_quit = true,
 
-                    (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                        self.move_point(*code)?;
-                    }
-                    _ => (),
+                (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
+                    self.move_point(*code)?;
                 }
+                _ => (),
+            },
+            Event::Resize(width16, height16) => {
+                #[allow(clippy::as_conversions)]
+                let width = *width16 as usize;
+                #[allow(clippy::as_conversions)]
+                let height = *height16 as usize;
+                self.view.resize(Size { width, height });
             }
             _ => (),
         }

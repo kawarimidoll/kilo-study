@@ -23,6 +23,10 @@ impl Default for View {
 }
 
 impl View {
+    pub fn resize(&mut self, to: Size) {
+        self.size = to;
+        self.needs_redraw = true;
+    }
     pub fn load(&mut self, filename: &str) {
         if let Ok(buffer) = Buffer::load(filename) {
             self.buffer = buffer;
@@ -76,7 +80,7 @@ impl View {
     }
     pub fn render(&mut self) -> Result<(), Error> {
         // render function
-        if !self.needs_redraw {
+        if !self.needs_redraw || self.size.width == 0 || self.size.height == 0 {
             return Ok(());
         }
         if self.buffer.is_empty() {
