@@ -1,6 +1,9 @@
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::Print;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, size, Clear, ClearType};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, size, Clear, ClearType, EnterAlternateScreen,
+    LeaveAlternateScreen,
+};
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
 
@@ -27,11 +30,13 @@ pub struct Terminal;
 impl Terminal {
     pub fn terminate() -> Result<(), Error> {
         Self::execute()?;
+        Self::queue_command(LeaveAlternateScreen)?;
         disable_raw_mode()?;
         Ok(())
     }
     pub fn initialize() -> Result<(), Error> {
         enable_raw_mode()?;
+        Self::queue_command(EnterAlternateScreen)?;
         Self::clear_screen()?;
         Self::execute()?;
         Ok(())
