@@ -33,10 +33,12 @@ impl Location {
 pub struct Editor {
     should_quit: bool,
     location: Location,
+    view: View,
 }
 
 impl Editor {
     pub fn run(&mut self) {
+        self.view.buffer.contents.push(String::from("Hello world"));
         Terminal::initialize().unwrap();
         let result = self.repl();
         Terminal::terminate().unwrap();
@@ -84,7 +86,7 @@ impl Editor {
             Terminal::clear_screen()?;
             Terminal::print("Goodbye!\r\n")?;
         } else {
-            View::render()?;
+            self.view.render()?;
             Terminal::move_caret_to(self.location.as_potition())?;
         }
         Terminal::show_caret()?;

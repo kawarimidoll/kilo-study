@@ -4,7 +4,21 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub struct View;
+#[derive(Default)]
+pub struct Buffer {
+    pub contents: Vec<String>,
+}
+
+impl Buffer {
+    pub fn len(&self) -> usize {
+        self.contents.len()
+    }
+}
+
+#[derive(Default)]
+pub struct View {
+    pub buffer: Buffer,
+}
 
 impl View {
     fn draw_welcome_message() -> Result<(), Error> {
@@ -24,12 +38,17 @@ impl View {
         Terminal::print("~")?;
         Ok(())
     }
-    pub fn render() -> Result<(), Error> {
+    pub fn render(&self) -> Result<(), Error> {
         // render function
         let height = Terminal::size()?.height;
-        Terminal::print("Hello World!\r\n")?;
-        for current_row in 1..height.saturating_sub(1) {
+        // Terminal::print("Hello World!\r\n")?;
+        for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
+            if current_row < self.buffer.len() {
+                Terminal::print(&self.buffer.contents[current_row])?;
+                Terminal::print(".\r\n")?;
+                continue;
+            }
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
             #[allow(clippy::integer_division)]
