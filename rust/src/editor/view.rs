@@ -12,6 +12,10 @@ pub struct View {
 }
 
 impl View {
+    pub fn load(&mut self, filename: String) -> Result<(), Error> {
+        self.buffer.load(filename)?;
+        Ok(())
+    }
     fn draw_welcome_message() -> Result<(), Error> {
         let width = Terminal::size()?.width;
 
@@ -32,18 +36,17 @@ impl View {
     pub fn render(&self) -> Result<(), Error> {
         // render function
         let height = Terminal::size()?.height;
-        // Terminal::print("Hello World!\r\n")?;
         for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
             if let Some(line) = self.buffer.lines.get(current_row) {
                 Terminal::print(line)?;
-                Terminal::print(".\r\n")?;
+                Terminal::print("\r\n")?;
                 continue;
             }
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
             #[allow(clippy::integer_division)]
-            if current_row == height / 3 {
+            if current_row == height / 3 && self.buffer.is_empty() {
                 Self::draw_welcome_message()?;
             }
             Self::draw_empty_row()?;

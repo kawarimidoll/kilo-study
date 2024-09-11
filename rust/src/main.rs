@@ -6,9 +6,17 @@
     clippy::as_conversions,
     clippy::integer_division
 )]
+
+use std::io::Error;
 mod editor;
 use editor::Editor;
 
-fn main() {
-    Editor::default().run();
+fn main() -> Result<(), Error> {
+    let mut editor = Editor::default();
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(first) = args.get(1) {
+        editor.load(String::from(first))?;
+    }
+    editor.run();
+    Ok(())
 }
