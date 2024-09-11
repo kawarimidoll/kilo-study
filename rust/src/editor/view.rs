@@ -1,26 +1,10 @@
+use buffer::Buffer;
+mod buffer;
 use super::terminal::Terminal;
 use std::io::Error;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-pub struct Buffer {
-    pub contents: Vec<String>,
-}
-
-impl Default for Buffer {
-    fn default() -> Self {
-        let mut contents = Vec::new();
-        contents.push(String::from("Hello world"));
-        Self { contents }
-    }
-}
-
-impl Buffer {
-    pub fn len(&self) -> usize {
-        self.contents.len()
-    }
-}
 
 #[derive(Default)]
 pub struct View {
@@ -52,7 +36,7 @@ impl View {
         for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
             if current_row < self.buffer.len() {
-                Terminal::print(&self.buffer.contents[current_row])?;
+                Terminal::print(&self.buffer.lines[current_row])?;
                 Terminal::print(".\r\n")?;
                 continue;
             }
