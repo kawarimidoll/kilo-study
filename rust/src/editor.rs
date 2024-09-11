@@ -56,16 +56,21 @@ impl Editor {
         })
     }
 
-    pub fn run(&mut self) -> Result<(), Error> {
+    pub fn run(&mut self) {
         loop {
             self.refresh_screen();
             if self.should_quit {
                 break;
             }
-            let event = read()?;
-            self.evaluate_event(event);
+            match read() {
+                Ok(event) => self.evaluate_event(event),
+
+                Err(err) => {
+                    #[cfg(debug_assertions)]
+                    panic!("Could not read event: {err}");
+                }
+            }
         }
-        Ok(())
     }
 
     // needless_pass_by_value: Event is not huge, so there is not a performance overhead in passing
