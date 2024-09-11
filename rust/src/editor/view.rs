@@ -12,9 +12,10 @@ pub struct View {
 }
 
 impl View {
-    pub fn load(&mut self, filename: String) -> Result<(), Error> {
-        self.buffer.load(filename)?;
-        Ok(())
+    pub fn load(&mut self, filename: &str) {
+        if let Ok(buffer) = Buffer::load(filename) {
+            self.buffer = buffer;
+        }
     }
     fn draw_welcome_message() -> Result<(), Error> {
         let width = Terminal::size()?.width;

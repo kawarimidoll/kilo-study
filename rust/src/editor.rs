@@ -37,16 +37,20 @@ pub struct Editor {
 }
 
 impl Editor {
-    pub fn load(&mut self, filename: String) -> Result<(), Error> {
-        self.view.load(filename)?;
-        Ok(())
-    }
-
     pub fn run(&mut self) {
         Terminal::initialize().unwrap();
+        self.handle_args();
         let result = self.repl();
         Terminal::terminate().unwrap();
         result.unwrap();
+    }
+
+    pub fn handle_args(&mut self) {
+        let args: Vec<String> = std::env::args().collect();
+        // only load the first file for now
+        if let Some(first) = args.get(1) {
+            self.view.load(first);
+        }
     }
 
     fn repl(&mut self) -> Result<(), Error> {
