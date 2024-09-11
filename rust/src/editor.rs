@@ -55,7 +55,7 @@ impl Editor {
 
     fn repl(&mut self) -> Result<(), Error> {
         loop {
-            self.refresh_screen()?;
+            self.refresh_screen();
             if self.should_quit {
                 break;
             }
@@ -94,19 +94,13 @@ impl Editor {
             _ => (),
         }
     }
-    fn refresh_screen(&mut self) -> Result<(), Error> {
-        Terminal::hide_caret()?;
-        Terminal::move_caret_to(Position::default())?;
-        if self.should_quit {
-            Terminal::clear_screen()?;
-            Terminal::print("Goodbye!\r\n")?;
-        } else {
-            self.view.render();
-            Terminal::move_caret_to(self.location.as_potition())?;
-        }
-        Terminal::show_caret()?;
-        Terminal::execute()?;
-        Ok(())
+    fn refresh_screen(&mut self) {
+        let _ = Terminal::hide_caret();
+        let _ = Terminal::move_caret_to(Position::default());
+        self.view.render();
+        let _ = Terminal::move_caret_to(self.location.as_potition());
+        let _ = Terminal::show_caret();
+        let _ = Terminal::execute();
     }
     fn move_point(&mut self, code: KeyCode) {
         let Location { x, y } = self.location;
@@ -124,5 +118,14 @@ impl Editor {
             PageDown => self.location.y = max_y,
             _ => (),
         };
+    }
+}
+
+impl Drop for Editor {
+    fn drop(&mut self) {
+        let _ = Terminal::terminate();
+        if self.should_quit {
+            let _ = Terminal::print("Goodbye!\r\n");
+        }
     }
 }
