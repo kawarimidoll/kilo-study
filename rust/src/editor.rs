@@ -60,11 +60,15 @@ impl Editor {
                 break;
             }
             let event = read()?;
-            self.evaluate_event(&event)?;
+            self.evaluate_event(event)?;
         }
         Ok(())
     }
-    fn evaluate_event(&mut self, event: &Event) -> Result<(), Error> {
+
+    // needless_pass_by_value: Event is not huge, so there is not a performance overhead in passing
+    // by value, and pattern matching on it is more ergonomic.
+    #[allow(clippy::needless_pass_by_value)]
+    fn evaluate_event(&mut self, event: Event) -> Result<(), Error> {
         match event {
             Key(KeyEvent {
                 code,
@@ -73,18 +77,18 @@ impl Editor {
                 kind: KeyEventKind::Press,
                 ..
             }) => match (code, modifiers) {
-                (Char('q'), &KeyModifiers::CONTROL) => self.should_quit = true,
+                (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
 
                 (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                    self.move_point(*code)?;
+                    self.move_point(code)?;
                 }
                 _ => (),
             },
             Event::Resize(width16, height16) => {
                 #[allow(clippy::as_conversions)]
-                let width = *width16 as usize;
+                let width = width16 as usize;
                 #[allow(clippy::as_conversions)]
-                let height = *height16 as usize;
+                let height = height16 as usize;
                 self.view.resize(Size { width, height });
             }
             _ => (),
