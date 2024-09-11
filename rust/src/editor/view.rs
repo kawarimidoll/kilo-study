@@ -6,10 +6,18 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(Default)]
 pub struct View {
     pub buffer: Buffer,
     pub needs_redraw: bool,
+}
+
+impl Default for View {
+    fn default() -> Self {
+        Self {
+            buffer: Buffer::default(),
+            needs_redraw: true,
+        }
+    }
 }
 
 impl View {
