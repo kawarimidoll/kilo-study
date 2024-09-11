@@ -34,25 +34,41 @@ impl View {
         Terminal::print("~")?;
         Ok(())
     }
-    pub fn render(&self) -> Result<(), Error> {
-        // render function
+    pub fn render_welcome_screen() -> Result<(), Error> {
         let height = Terminal::size()?.height;
         for current_row in 0..height.saturating_sub(1) {
             Terminal::clear_line()?;
-            if let Some(line) = self.buffer.lines.get(current_row) {
-                Terminal::print(line)?;
-                Terminal::print("\r\n")?;
-                continue;
-            }
             // we alow this since we don't care if our welcome message is put *exactly* in the middle.
             // it's allowed to be a bit up or down
             #[allow(clippy::integer_division)]
-            if current_row == height / 3 && self.buffer.is_empty() {
+            if current_row == height / 3 {
                 Self::draw_welcome_message()?;
             }
             Self::draw_empty_row()?;
             // to ensure it works, add `.`
             Terminal::print(".\r\n")?;
+        }
+        Ok(())
+    }
+    pub fn render_buffer(&self) -> Result<(), Error> {
+        let height = Terminal::size()?.height;
+        for current_row in 0..height.saturating_sub(1) {
+            Terminal::clear_line()?;
+            if let Some(line) = self.buffer.lines.get(current_row) {
+                Terminal::print(line)?;
+            } else {
+                Self::draw_empty_row()?;
+            }
+            Terminal::print("\r\n")?;
+        }
+        Ok(())
+    }
+    pub fn render(&self) -> Result<(), Error> {
+        // render function
+        if self.buffer.is_empty() {
+            Self::render_welcome_screen()?;
+        } else {
+            self.render_buffer()?;
         }
         // here comes status line
         Terminal::print("--------")?;
