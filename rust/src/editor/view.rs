@@ -9,6 +9,7 @@ use super::{
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+const FILLCHAR_EOB: &str = "~";
 
 #[derive(Copy, Clone, Default)]
 pub struct Location {
@@ -73,7 +74,7 @@ impl View {
         for mut message in messages {
             #[allow(clippy::integer_division)]
             let col = self.size.width.saturating_sub(message.len()) / 2;
-            message = format!("~{}{}", " ".repeat(col), message);
+            message = format!("{FILLCHAR_EOB}{}{}", " ".repeat(col), message);
             message.truncate(self.size.width.saturating_sub(1));
             Self::render_line(row, &message);
             row = row.saturating_add(1);
@@ -85,11 +86,12 @@ impl View {
     }
     pub fn render_buffer(&self) {
         for current_row in 0..self.size.height.saturating_sub(1) {
-            if let Some(line) = self.buffer.lines.get(current_row) {
-                Self::render_line(current_row, &line.get(0..self.size.width));
+            let line_text = if let Some(line) = self.buffer.lines.get(current_row) {
+                &line.get(0..self.size.width)
             } else {
-                Self::render_line(current_row, "~");
-            }
+                FILLCHAR_EOB
+            };
+            Self::render_line(current_row, line_text);
         }
     }
     pub fn render(&mut self) {
