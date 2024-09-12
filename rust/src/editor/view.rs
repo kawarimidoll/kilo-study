@@ -1,4 +1,5 @@
 use buffer::Buffer;
+use line::Line;
 use std::cmp::min;
 mod buffer;
 mod line;
@@ -109,59 +110,44 @@ impl View {
 
     pub fn move_point(&mut self, direction: &Direction) {
         let Location { x, y } = self.location;
-        let Size { height, .. } = Terminal::size().unwrap_or_default();
         match direction {
             Direction::Left => {
                 if x == 0 && y == 0 {
                     // do nothing
                 } else if x == 0 {
-                    self.move_point(&Direction::Up);
-                    self.move_point(&Direction::End);
+                    self.location.y = y.saturating_sub(1);
+                    self.location.x = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
                 } else {
                     self.location.x = x.saturating_sub(1);
                 }
             }
             Direction::Right => {
-                let line_len = if let Some(line) = self.buffer.lines.get(y) {
-                    line.len()
-                } else {
-                    0
-                };
+                let line_len = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
                 if x == line_len {
-                    self.move_point(&Direction::Down);
-                    self.move_point(&Direction::Home);
+                    self.location.x = 0;
+                    self.location.y = y.saturating_add(1);
                 } else {
                     self.location.x = x.saturating_add(1);
                 }
             }
             Direction::Up => self.location.y = y.saturating_sub(1),
-            Direction::Down => {
-                self.location.y = min(y.saturating_add(1), self.buffer.lines.len());
-            }
+            Direction::Down => self.location.y = y.saturating_add(1),
             Direction::Home => self.location.x = 0,
             Direction::End => {
-                let line_len = if let Some(line) = self.buffer.lines.get(y) {
-                    line.len()
-                } else {
-                    0
-                };
-                self.location.x = line_len;
+                self.location.x = self.buffer.lines.get(y).map_or(0, Line::len);
             }
             Direction::PageUp => {
-                self.location.y = y.saturating_sub(height);
+                self.location.y = y.saturating_sub(self.size.height);
             }
             Direction::PageDown => {
-                self.location.y = min(y.saturating_add(height), self.buffer.lines.len());
+                self.location.y = min(y.saturating_add(self.size.height), self.buffer.lines.len());
             }
         };
 
-        // snap overrun to right
-        let line_len = if let Some(line) = self.buffer.lines.get(self.location.y) {
-            line.len()
-        } else {
-            0
-        };
+        // snap within bounds
+        let line_len = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
         self.location.x = min(self.location.x, line_len);
+        self.location.y = min(self.location.y, self.buffer.lines.len());
 
         self.scroll_into_view();
     }
