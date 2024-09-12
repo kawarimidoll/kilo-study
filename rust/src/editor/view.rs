@@ -31,6 +31,7 @@ pub struct View {
     pub needs_redraw: bool,
     pub size: Size,
     pub location: Location,
+    pub scroll_offset: Location,
 }
 
 impl Default for View {
@@ -40,6 +41,7 @@ impl Default for View {
             needs_redraw: true,
             size: Terminal::size().unwrap_or_default(),
             location: Location::default(),
+            scroll_offset: Location::default(),
         }
     }
 }
@@ -85,12 +87,16 @@ impl View {
         debug_assert!(result.is_ok(), "Failed to render line");
     }
     pub fn render_buffer(&self) {
+        let top = self.scroll_offset.y;
+        let left = self.scroll_offset.x;
+        let right = left.saturating_add(self.size.width);
         for current_row in 0..self.size.height.saturating_sub(1) {
-            let line_text = if let Some(line) = self.buffer.lines.get(current_row) {
-                &line.get(0..self.size.width)
-            } else {
-                FILLCHAR_EOB
-            };
+            let line_text =
+                if let Some(line) = self.buffer.lines.get(current_row.saturating_add(top)) {
+                    &line.get(left..right)
+                } else {
+                    FILLCHAR_EOB
+                };
             Self::render_line(current_row, line_text);
         }
     }
