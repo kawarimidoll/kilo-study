@@ -59,30 +59,43 @@ impl Editor {
     // by value, and pattern matching on it is more ergonomic.
     #[allow(clippy::needless_pass_by_value)]
     fn evaluate_event(&mut self, event: Event) {
-        match event {
-            Key(KeyEvent {
-                code,
-                modifiers,
-                // necessary for windows
-                kind: KeyEventKind::Press,
-                ..
-            }) => match (code, modifiers) {
-                (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
+        let should_process = match event {
+            Key(KeyEvent { kind, .. }) => kind == KeyEventKind::Press,
+            Event::Resize(_, _) => true,
+            _ => false,
+        };
+        if should_process {
+            match event {
+                Key(KeyEvent {
+                    code,
+                    modifiers,
+                    // necessary for windows
+                    kind: KeyEventKind::Press,
+                    ..
+                }) => match (code, modifiers) {
+                    (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
 
-                (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                    self.view.move_point(code);
+                    (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
+                        self.view.move_point(code);
+                    }
+
+                    _ => (),
+                },
+                Event::Resize(width16, height16) => {
+                    #[allow(clippy::as_conversions)]
+                    let width = width16 as usize;
+                    #[allow(clippy::as_conversions)]
+                    let height = height16 as usize;
+                    self.view.resize(Size { width, height });
                 }
-
-                _ => (),
-            },
-            Event::Resize(width16, height16) => {
-                #[allow(clippy::as_conversions)]
-                let width = width16 as usize;
-                #[allow(clippy::as_conversions)]
-                let height = height16 as usize;
-                self.view.resize(Size { width, height });
+                _ => {
+                    #[cfg(debug_assertions)]
+                    panic!("Could not handle command");
+                }
             }
-            _ => (),
+        } else {
+            #[cfg(debug_assertions)]
+            panic!("Received and discarded unsupported or non-press event.");
         }
     }
     fn refresh_screen(&mut self) {
