@@ -111,8 +111,29 @@ impl View {
         let Location { x, y } = self.location;
         let Size { height, .. } = Terminal::size().unwrap_or_default();
         match direction {
-            Direction::Left => self.location.x = x.saturating_sub(1),
-            Direction::Right => self.location.x = x.saturating_add(1),
+            Direction::Left => {
+                if x == 0 && y == 0 {
+                    // do nothing
+                } else if x == 0 {
+                    self.move_point(&Direction::Up);
+                    self.move_point(&Direction::End);
+                } else {
+                    self.location.x = x.saturating_sub(1);
+                }
+            }
+            Direction::Right => {
+                let line_len = if let Some(line) = self.buffer.lines.get(y) {
+                    line.len()
+                } else {
+                    0
+                };
+                if x == line_len {
+                    self.move_point(&Direction::Down);
+                    self.move_point(&Direction::Home);
+                } else {
+                    self.location.x = x.saturating_add(1);
+                }
+            }
             Direction::Up => self.location.y = y.saturating_sub(1),
             Direction::Down => {
                 self.location.y = min(y.saturating_add(1), self.buffer.lines.len());
