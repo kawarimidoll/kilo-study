@@ -81,7 +81,7 @@ impl View {
         let right = left.saturating_add(self.size.width);
         for current_row in 0..self.size.height.saturating_sub(1) {
             let line_text =
-                if let Some(line) = self.buffer.lines.get(current_row.saturating_add(top)) {
+                if let Some(line) = self.get_line(current_row.saturating_add(top)) {
                     &line.get(left..right)
                 } else {
                     FILLCHAR_EOB
@@ -108,46 +108,52 @@ impl View {
         self.location.subtract(&self.scroll_offset).into()
     }
 
+    pub fn get_line(&self, row: usize) -> Option<&Line> {
+        self.buffer.lines.get(row)
+    }
+
     pub fn move_point(&mut self, direction: &Direction) {
-        let Location { x, y } = self.location;
+        let Location { mut x, mut y } = self.location;
+        // This match moves the position, but does not check for all boundaries.
+        // The final boundary checking happens after the match statement.
         match direction {
             Direction::Left => {
-                if x == 0 && y == 0 {
-                    // do nothing
-                } else if x == 0 {
-                    self.location.y = y.saturating_sub(1);
-                    self.location.x = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
-                } else {
-                    self.location.x = x.saturating_sub(1);
+                if x > 0 {
+                    x = x.saturating_sub(1);
+                } else if y > 0 {
+                    y = y.saturating_sub(1);
+                    x = self.get_line(y).map_or(0, Line::len);
                 }
+                // do nothing if x == 0 and y == 0
             }
             Direction::Right => {
-                let line_len = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
+                let line_len = self.get_line(y).map_or(0, Line::len);
                 if x == line_len {
-                    self.location.x = 0;
-                    self.location.y = y.saturating_add(1);
+                    x = 0;
+                    y = y.saturating_add(1);
                 } else {
-                    self.location.x = x.saturating_add(1);
+                    x = x.saturating_add(1);
                 }
             }
-            Direction::Up => self.location.y = y.saturating_sub(1),
-            Direction::Down => self.location.y = y.saturating_add(1),
-            Direction::Home => self.location.x = 0,
+            Direction::Up => y = y.saturating_sub(1),
+            Direction::Down => y = y.saturating_add(1),
+            Direction::Home => x = 0,
             Direction::End => {
-                self.location.x = self.buffer.lines.get(y).map_or(0, Line::len);
+                x = self.get_line(y).map_or(0, Line::len);
             }
             Direction::PageUp => {
-                self.location.y = y.saturating_sub(self.size.height);
+                y = y.saturating_sub(self.size.height).saturating_sub(1);
             }
             Direction::PageDown => {
-                self.location.y = min(y.saturating_add(self.size.height), self.buffer.lines.len());
+                y = y.saturating_add(self.size.height).saturating_sub(1);
             }
         };
 
         // snap within bounds
-        let line_len = self.buffer.lines.get(self.location.y).map_or(0, Line::len);
-        self.location.x = min(self.location.x, line_len);
-        self.location.y = min(self.location.y, self.buffer.lines.len());
+        x = min(x, self.get_line(y).map_or(0, Line::len));
+        y = min(y, self.buffer.lines.len());
+
+        self.location = Location { x, y };
 
         self.scroll_into_view();
     }
