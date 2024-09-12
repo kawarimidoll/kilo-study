@@ -112,14 +112,7 @@ impl View {
         let Size { height, .. } = Terminal::size().unwrap_or_default();
         match direction {
             Direction::Left => self.location.x = x.saturating_sub(1),
-            Direction::Right => {
-                let line_len = if let Some(line) = self.buffer.lines.get(y) {
-                    line.len()
-                } else {
-                    0
-                };
-                self.location.x = min(x.saturating_add(1), line_len);
-            }
+            Direction::Right => self.location.x = x.saturating_add(1),
             Direction::Up => self.location.y = y.saturating_sub(1),
             Direction::Down => {
                 self.location.y = min(y.saturating_add(1), self.buffer.lines.len());
@@ -140,6 +133,15 @@ impl View {
                 self.location.y = min(y.saturating_add(height), self.buffer.lines.len());
             }
         };
+
+        // snap overrun to right
+        let line_len = if let Some(line) = self.buffer.lines.get(self.location.y) {
+            line.len()
+        } else {
+            0
+        };
+        self.location.x = min(self.location.x, line_len);
+
         self.scroll_into_view();
     }
     fn scroll_into_view(&mut self) {
