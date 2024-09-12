@@ -1,14 +1,14 @@
 use crossterm::event::{
     read,
     Event::{self, Key},
-    KeyCode::{Char, Down, End, Home, Left, PageDown, PageUp, Right, Up},
     // Backspace, Delete, Enter,
     KeyEvent,
     KeyEventKind,
-    KeyModifiers,
 };
-use terminal::{Size, Terminal};
+use terminal::Terminal;
+mod editor_command;
 mod terminal;
+use editor_command::EditorCommand;
 use view::View;
 mod view;
 use std::io::Error;
@@ -65,32 +65,17 @@ impl Editor {
             _ => false,
         };
         if should_process {
-            match event {
-                Key(KeyEvent {
-                    code,
-                    modifiers,
-                    // necessary for windows
-                    kind: KeyEventKind::Press,
-                    ..
-                }) => match (code, modifiers) {
-                    (Char('q'), KeyModifiers::CONTROL) => self.should_quit = true,
-
-                    (Left | Down | Right | Up | Home | End | PageDown | PageUp, _) => {
-                        self.view.move_point(code);
+            match EditorCommand::try_from(event) {
+                Ok(command) => {
+                    if matches!(command, EditorCommand::Quit) {
+                        self.should_quit = true;
+                    } else {
+                        self.view.handle_command(command);
                     }
-
-                    _ => (),
-                },
-                Event::Resize(width16, height16) => {
-                    #[allow(clippy::as_conversions)]
-                    let width = width16 as usize;
-                    #[allow(clippy::as_conversions)]
-                    let height = height16 as usize;
-                    self.view.resize(Size { width, height });
                 }
-                _ => {
+                Err(err) => {
                     #[cfg(debug_assertions)]
-                    panic!("Could not handle command");
+                    panic!("Could not evaluate command: {err}");
                 }
             }
         } else {
