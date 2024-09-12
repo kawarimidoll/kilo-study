@@ -1,4 +1,5 @@
 use buffer::Buffer;
+use std::cmp::min;
 mod buffer;
 mod line;
 mod location;
@@ -108,15 +109,29 @@ impl View {
 
     pub fn move_point(&mut self, direction: &Direction) {
         let Location { x, y } = self.location;
-        let Location { x: off_x, y: off_y } = self.scroll_offset;
-        let Size { width, height } = Terminal::size().unwrap_or_default();
+        let Location { y: off_y, .. } = self.scroll_offset;
+        let Size { height, .. } = Terminal::size().unwrap_or_default();
         match direction {
             Direction::Left => self.location.x = x.saturating_sub(1),
-            Direction::Right => self.location.x = x.saturating_add(1),
+            Direction::Right => {
+                let line_len = if let Some(line) = self.buffer.lines.get(y) {
+                    line.len()
+                } else {
+                    0
+                };
+                self.location.x = min(x.saturating_add(1), line_len);
+            }
             Direction::Up => self.location.y = y.saturating_sub(1),
             Direction::Down => self.location.y = y.saturating_add(1),
-            Direction::Home => self.location.x = off_x,
-            Direction::End => self.location.x = width.saturating_add(off_x).saturating_sub(1),
+            Direction::Home => self.location.x = 0,
+            Direction::End => {
+                let line_len = if let Some(line) = self.buffer.lines.get(y) {
+                    line.len()
+                } else {
+                    0
+                };
+                self.location.x = line_len;
+            }
             Direction::PageUp => self.location.y = off_y,
             Direction::PageDown => self.location.y = height.saturating_add(off_y).saturating_sub(1),
         };
