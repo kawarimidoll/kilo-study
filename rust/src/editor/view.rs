@@ -1,5 +1,4 @@
 use buffer::Buffer;
-use core::cmp::min;
 mod buffer;
 mod line;
 use super::{
@@ -22,6 +21,12 @@ impl Location {
         Position {
             col: self.x,
             row: self.y,
+        }
+    }
+    pub const fn subtract(&self, other: &Self) -> Self {
+        Self {
+            x: self.x.saturating_sub(other.x),
+            y: self.y.saturating_sub(other.y),
         }
     }
 }
@@ -56,6 +61,7 @@ impl View {
     }
     pub fn resize(&mut self, to: Size) {
         self.size = to;
+        self.scroll_into_view();
         self.needs_redraw = true;
     }
     pub fn load(&mut self, filename: &str) {
@@ -115,20 +121,42 @@ impl View {
         self.needs_redraw = false;
     }
 
+    pub fn get_position(&self) -> Position {
+        self.location.subtract(&self.scroll_offset).as_potition()
+    }
+
     pub fn move_point(&mut self, direction: &Direction) {
         let Location { x, y } = self.location;
+        let Location { x: off_x, y: off_y } = self.scroll_offset;
         let Size { width, height } = Terminal::size().unwrap_or_default();
-        let max_x = width.saturating_sub(1);
-        let max_y = height.saturating_sub(1);
         match direction {
             Direction::Left => self.location.x = x.saturating_sub(1),
-            Direction::Right => self.location.x = min(max_x, x.saturating_add(1)),
+            Direction::Right => self.location.x = x.saturating_add(1),
             Direction::Up => self.location.y = y.saturating_sub(1),
-            Direction::Down => self.location.y = min(max_y, y.saturating_add(1)),
-            Direction::Home => self.location.x = 0,
-            Direction::End => self.location.x = max_x,
-            Direction::PageUp => self.location.y = 0,
-            Direction::PageDown => self.location.y = max_y,
+            Direction::Down => self.location.y = y.saturating_add(1),
+            Direction::Home => self.location.x = off_x,
+            Direction::End => self.location.x = width.saturating_add(off_x).saturating_sub(1),
+            Direction::PageUp => self.location.y = off_y,
+            Direction::PageDown => self.location.y = height.saturating_add(off_y).saturating_sub(1),
         };
+        self.scroll_into_view();
+    }
+    fn scroll_into_view(&mut self) {
+        let Location { x, y } = self.location;
+        let Size { width, height } = self.size;
+        if x < self.scroll_offset.x {
+            self.scroll_offset.x = x;
+            self.needs_redraw = true;
+        } else if x >= self.scroll_offset.x.saturating_add(width) {
+            self.scroll_offset.x = x.saturating_sub(width).saturating_add(1);
+            self.needs_redraw = true;
+        }
+        if y < self.scroll_offset.y {
+            self.scroll_offset.y = y;
+            self.needs_redraw = true;
+        } else if y >= self.scroll_offset.y.saturating_add(height) {
+            self.scroll_offset.y = y.saturating_sub(height).saturating_add(1);
+            self.needs_redraw = true;
+        }
     }
 }
