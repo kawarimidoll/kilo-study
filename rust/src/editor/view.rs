@@ -1,35 +1,16 @@
 use buffer::Buffer;
 mod buffer;
 mod line;
+mod location;
 use super::{
     editor_command::{Direction, EditorCommand},
     terminal::{Position, Size, Terminal},
 };
+use location::Location;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const FILLCHAR_EOB: &str = "~";
-
-#[derive(Copy, Clone, Default)]
-pub struct Location {
-    // the position of the document
-    pub x: usize,
-    pub y: usize,
-}
-impl Location {
-    pub fn as_potition(&self) -> Position {
-        Position {
-            col: self.x,
-            row: self.y,
-        }
-    }
-    pub const fn subtract(&self, other: &Self) -> Self {
-        Self {
-            x: self.x.saturating_sub(other.x),
-            y: self.y.saturating_sub(other.y),
-        }
-    }
-}
 
 pub struct View {
     pub buffer: Buffer,
@@ -122,7 +103,7 @@ impl View {
     }
 
     pub fn get_position(&self) -> Position {
-        self.location.subtract(&self.scroll_offset).as_potition()
+        self.location.subtract(&self.scroll_offset).into()
     }
 
     pub fn move_point(&mut self, direction: &Direction) {
