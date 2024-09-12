@@ -2,6 +2,7 @@ use crossterm::event::KeyCode;
 use core::cmp::min;
 use buffer::Buffer;
 mod buffer;
+mod line;
 use super::terminal::{Position, Size, Terminal};
 
 const NAME: &str = env!("CARGO_PKG_NAME");
@@ -76,9 +77,7 @@ impl View {
     pub fn render_buffer(&self) {
         for current_row in 0..self.size.height.saturating_sub(1) {
             if let Some(line) = self.buffer.lines.get(current_row) {
-                let mut l = String::from(line);
-                l.truncate(self.size.width);
-                Self::render_line(current_row, &l);
+                Self::render_line(current_row, &line.get(0..self.size.width));
             } else {
                 Self::render_line(current_row, "~");
             }
