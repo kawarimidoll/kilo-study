@@ -109,7 +109,6 @@ impl View {
 
     pub fn move_point(&mut self, direction: &Direction) {
         let Location { x, y } = self.location;
-        let Location { y: off_y, .. } = self.scroll_offset;
         let Size { height, .. } = Terminal::size().unwrap_or_default();
         match direction {
             Direction::Left => self.location.x = x.saturating_sub(1),
@@ -122,7 +121,9 @@ impl View {
                 self.location.x = min(x.saturating_add(1), line_len);
             }
             Direction::Up => self.location.y = y.saturating_sub(1),
-            Direction::Down => self.location.y = y.saturating_add(1),
+            Direction::Down => {
+                self.location.y = min(y.saturating_add(1), self.buffer.lines.len());
+            }
             Direction::Home => self.location.x = 0,
             Direction::End => {
                 let line_len = if let Some(line) = self.buffer.lines.get(y) {
@@ -132,8 +133,12 @@ impl View {
                 };
                 self.location.x = line_len;
             }
-            Direction::PageUp => self.location.y = off_y,
-            Direction::PageDown => self.location.y = height.saturating_add(off_y).saturating_sub(1),
+            Direction::PageUp => {
+                self.location.y = y.saturating_sub(height);
+            }
+            Direction::PageDown => {
+                self.location.y = min(y.saturating_add(height), self.buffer.lines.len());
+            }
         };
         self.scroll_into_view();
     }
