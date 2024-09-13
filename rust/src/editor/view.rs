@@ -125,8 +125,8 @@ impl View {
         // This match moves the position, but does not check for all boundaries.
         // The final boundary checking happens after the match statement.
         match direction {
-            Direction::Left => self.move_left(1),
-            Direction::Right => self.move_right(1),
+            Direction::Left => self.move_left(),
+            Direction::Right => self.move_right(),
             Direction::Up => self.move_up(1),
             Direction::Down => self.move_down(1),
             Direction::Home => self.move_to_start_of_line(),
@@ -135,11 +135,11 @@ impl View {
             Direction::PageDown => self.move_down(self.size.height.saturating_sub(1)),
         };
 
-
         self.scroll_into_view();
     }
     fn move_up(&mut self, step: usize) {
         self.location.y = self.location.y.saturating_sub(step);
+        self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
     fn move_down(&mut self, step: usize) {
@@ -147,27 +147,22 @@ impl View {
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
-    fn move_left(&mut self, step: usize) {
-        let Location { mut x, mut y } = self.location;
-        if x > 0 {
-            x = x.saturating_sub(step);
-        } else if y > 0 {
-            y = y.saturating_sub(step);
-            x = self.get_line(y).map_or(0, Line::len);
+    fn move_left(&mut self) {
+        if self.location.x > 0 {
+            self.location.x = self.location.x.saturating_sub(1);
+        } else  {
+            self.move_up(1);
+            self.move_to_end_of_line();
         }
-        // do nothing if x == 0 and y == 0
-        self.location = Location { x, y };
     }
-    fn move_right(&mut self, step: usize) {
-        let Location { mut x, mut y } = self.location;
-        let line_len = self.get_line(y).map_or(0, Line::len);
-        if x == line_len {
-            x = 0;
-            y = y.saturating_add(step);
+    fn move_right(&mut self) {
+        let line_len = self.get_line(self.location.y).map_or(0, Line::len);
+        if self.location.x == line_len {
+            self.move_to_start_of_line();
+            self.move_down(1);
         } else {
-            x = x.saturating_add(step);
+            self.location.x = self.location.x.saturating_add(1);
         }
-        self.location = Location { x, y };
     }
     fn move_to_start_of_line(&mut self) {
         self.location.x = 0;
