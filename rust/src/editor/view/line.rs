@@ -69,8 +69,11 @@ pub struct Line {
 impl Line {
     pub fn from(string: &str) -> Self {
         Self {
-            fragments: string.graphemes(true).map(TextFragment::new).collect(),
+            fragments: Self::string_to_fragments(string),
         }
+    }
+    fn string_to_fragments(string: &str) -> Vec<TextFragment> {
+        string.graphemes(true).map(TextFragment::new).collect()
     }
     pub fn get(&self, range: Range<usize>) -> String {
         let mut result = String::new();

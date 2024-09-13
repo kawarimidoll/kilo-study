@@ -41,13 +41,11 @@ impl TryFrom<Event> for EditorCommand {
                 (Up, _) => Ok(Self::Move(Direction::Up)),
                 _ => Err(format!("Unrecognized key: {code:?}")),
             },
-            Event::Resize(width16, height16) => {
-                #[allow(clippy::as_conversions)]
-                let width = width16 as usize;
-                #[allow(clippy::as_conversions)]
-                let height = height16 as usize;
-                Ok(Self::Resize(Size { width, height }))
-            }
+            #[allow(clippy::as_conversions)]
+            Event::Resize(width16, height16) => Ok(Self::Resize(Size {
+                width: width16 as usize,
+                height: height16 as usize,
+            })),
             _ => Err(format!("Unrecognized event: {event:?}")),
         }
     }
