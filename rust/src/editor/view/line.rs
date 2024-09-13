@@ -34,14 +34,30 @@ impl TextFragment {
             0 | 1 => GraphemeWidth::Half,
             _ => GraphemeWidth::Full,
         };
-        let replacement = match grapheme.width() {
-            0 => Some('·'),
-            _ => None,
-        };
+        let replacement = Self::get_replacement(grapheme);
         Self {
             grapheme: String::from(grapheme),
             width,
             replacement,
+        }
+    }
+    fn get_replacement(grapheme: &str) -> Option<char> {
+        let g_width = grapheme.width();
+        match grapheme {
+            " " => None,
+            "\t" => Some('→'),
+            _ if g_width > 0 && grapheme.trim().is_empty() => Some('␣'),
+            _ if g_width == 0 => {
+                // it doesn't seem to work properly...
+                let mut chars = grapheme.chars();
+                if let Some(ch) = chars.next() {
+                    if ch.is_control() && chars.next().is_none() {
+                        return Some('▯');
+                    }
+                }
+                Some('·')
+            }
+            _ => None,
         }
     }
 }
