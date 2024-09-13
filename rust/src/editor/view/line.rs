@@ -117,4 +117,7 @@ impl Line {
             .map(|fragment| fragment.width.as_usize())
             .sum()
     }
+    pub fn insert(&mut self, at: usize, string: &str) {
+        self.fragments.splice(at..at, Self::string_to_fragments(string));
+    }
 }

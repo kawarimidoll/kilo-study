@@ -20,6 +20,7 @@ pub enum Direction {
 pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
+    Char(char),
     Quit,
 }
 
@@ -31,6 +32,7 @@ impl TryFrom<Event> for EditorCommand {
                 code, modifiers, ..
             }) => match (code, modifiers) {
                 (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
+                (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Char(c)),
                 (Down, _) => Ok(Self::Move(Direction::Down)),
                 (End, _) => Ok(Self::Move(Direction::End)),
                 (Home, _) => Ok(Self::Move(Direction::Home)),
@@ -39,7 +41,7 @@ impl TryFrom<Event> for EditorCommand {
                 (PageUp, _) => Ok(Self::Move(Direction::PageUp)),
                 (Right, _) => Ok(Self::Move(Direction::Right)),
                 (Up, _) => Ok(Self::Move(Direction::Up)),
-                _ => Err(format!("Unrecognized key: {code:?}")),
+                _ => Err(format!("Unrecognized key: {code:?}, modifiers: {modifiers:?}")),
             },
             #[allow(clippy::as_conversions)]
             Event::Resize(width16, height16) => Ok(Self::Resize(Size {

@@ -39,7 +39,15 @@ impl View {
         match command {
             EditorCommand::Move(direction) => self.move_text_location(&direction),
             EditorCommand::Resize(size) => self.resize(size),
+            EditorCommand::Char(c) => self.insert(c),
             EditorCommand::Quit => {}
+        }
+    }
+    pub fn insert(&mut self, c: char) {
+        if let Some(line) = self.buffer.lines.get_mut(self.location.y) {
+            line.insert(self.location.x, &String::from(c));
+            self.move_right();
+            self.needs_redraw = true;
         }
     }
     pub fn resize(&mut self, to: Size) {
@@ -150,7 +158,7 @@ impl View {
     fn move_left(&mut self) {
         if self.location.x > 0 {
             self.location.x = self.location.x.saturating_sub(1);
-        } else  {
+        } else {
             self.move_up(1);
             self.move_to_end_of_line();
         }
