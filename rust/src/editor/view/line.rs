@@ -77,7 +77,7 @@ impl Line {
                     result.push_str(&fragment.grapheme);
                 }
             }
-            current_pos = fragment_end
+            current_pos = fragment_end;
         }
 
         result
