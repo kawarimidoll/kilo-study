@@ -19,7 +19,7 @@ pub struct View {
     pub needs_redraw: bool,
     pub size: Size,
     pub location: Location,
-    pub scroll_offset: Location,
+    pub scroll_offset: Position,
 }
 
 impl Default for View {
@@ -29,7 +29,7 @@ impl Default for View {
             needs_redraw: true,
             size: Terminal::size().unwrap_or_default(),
             location: Location::default(),
-            scroll_offset: Location::default(),
+            scroll_offset: Position::default(),
         }
     }
 }
@@ -76,16 +76,15 @@ impl View {
         debug_assert!(result.is_ok(), "Failed to render line");
     }
     pub fn render_buffer(&self) {
-        let top = self.scroll_offset.y;
-        let left = self.scroll_offset.x;
+        let top = self.scroll_offset.row;
+        let left = self.scroll_offset.col;
         let right = left.saturating_add(self.size.width);
         for current_row in 0..self.size.height.saturating_sub(1) {
-            let line_text =
-                if let Some(line) = self.get_line(current_row.saturating_add(top)) {
-                    &line.get(left..right)
-                } else {
-                    FILLCHAR_EOB
-                };
+            let line_text = if let Some(line) = self.get_line(current_row.saturating_add(top)) {
+                &line.get(left..right)
+            } else {
+                FILLCHAR_EOB
+            };
             Self::render_line(current_row, line_text);
         }
     }
@@ -104,8 +103,18 @@ impl View {
         self.needs_redraw = false;
     }
 
-    pub fn get_position(&self) -> Position {
-        self.location.subtract(&self.scroll_offset).into()
+    pub fn caret_position(&self) -> Position {
+        self.text_location_to_position()
+            .saturating_sub(&self.scroll_offset)
+    }
+    pub fn text_location_to_position(&self) -> Position {
+        let row = self.location.y;
+        let col = self
+            .buffer
+            .lines
+            .get(row)
+            .map_or(0, |line| line.width_until(self.location.x));
+        Position { col, row }
     }
 
     pub fn get_line(&self, row: usize) -> Option<&Line> {
@@ -160,18 +169,18 @@ impl View {
     fn scroll_into_view(&mut self) {
         let Location { x, y } = self.location;
         let Size { width, height } = self.size;
-        if x < self.scroll_offset.x {
-            self.scroll_offset.x = x;
+        if x < self.scroll_offset.col {
+            self.scroll_offset.col = x;
             self.needs_redraw = true;
-        } else if x >= self.scroll_offset.x.saturating_add(width) {
-            self.scroll_offset.x = x.saturating_sub(width).saturating_add(1);
+        } else if x >= self.scroll_offset.col.saturating_add(width) {
+            self.scroll_offset.col = x.saturating_sub(width).saturating_add(1);
             self.needs_redraw = true;
         }
-        if y < self.scroll_offset.y {
-            self.scroll_offset.y = y;
+        if y < self.scroll_offset.row {
+            self.scroll_offset.row = y;
             self.needs_redraw = true;
-        } else if y >= self.scroll_offset.y.saturating_add(height) {
-            self.scroll_offset.y = y.saturating_sub(height).saturating_add(1);
+        } else if y >= self.scroll_offset.row.saturating_add(height) {
+            self.scroll_offset.row = y.saturating_sub(height).saturating_add(1);
             self.needs_redraw = true;
         }
     }

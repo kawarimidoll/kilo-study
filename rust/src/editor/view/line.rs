@@ -14,6 +14,12 @@ impl GraphemeWidth {
             Self::Full => other.saturating_add(2),
         }
     }
+    fn as_usize(&self) -> usize {
+        match self {
+            Self::Half => 1,
+            Self::Full => 2,
+        }
+    }
 }
 
 struct TextFragment {
@@ -84,5 +90,12 @@ impl Line {
     }
     pub fn len(&self) -> usize {
         self.fragments.len()
+    }
+    pub fn width_until(&self, end: usize) -> usize {
+        self.fragments
+            .iter()
+            .take(end)
+            .map(|fragment| fragment.width.as_usize())
+            .sum()
     }
 }
