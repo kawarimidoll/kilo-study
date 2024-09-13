@@ -1,4 +1,4 @@
-use super::line::Line;
+use super::{line::Line, location::Location};
 use std::{fs::read_to_string, io::Error};
 
 #[derive(Default)]
@@ -12,6 +12,30 @@ impl Buffer {
     }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
+    }
+    pub fn insert_char(&mut self, c: char, at: Location) -> bool {
+        let Location { x, y } = at;
+        // out of bounds
+        if y > self.height() {
+            return false;
+        }
+
+        let string = c.to_string();
+
+        // append a new line
+        if y == self.height() {
+            self.lines.push(Line::from(&string));
+            return true;
+        }
+
+        // insert a new character in an existing line
+        if let Some(line) = self.lines.get_mut(y) {
+            line.insert(x, &string);
+            return true;
+        }
+
+        // maybe dead code, but the compiler doesn't know that
+        false
     }
     pub fn load(filename: &str) -> Result<Self, Error> {
         let contents = read_to_string(filename)?;

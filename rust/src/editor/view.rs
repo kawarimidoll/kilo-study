@@ -44,8 +44,7 @@ impl View {
         }
     }
     pub fn insert(&mut self, c: char) {
-        if let Some(line) = self.buffer.lines.get_mut(self.location.y) {
-            line.insert(self.location.x, &String::from(c));
+        if self.buffer.insert_char(c, self.location) {
             self.move_right();
             self.needs_redraw = true;
         }
