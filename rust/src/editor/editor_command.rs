@@ -33,15 +33,17 @@ impl TryFrom<Event> for EditorCommand {
             }) => match (code, modifiers) {
                 (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
                 (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Char(c)),
-                (Down, _) => Ok(Self::Move(Direction::Down)),
-                (End, _) => Ok(Self::Move(Direction::End)),
-                (Home, _) => Ok(Self::Move(Direction::Home)),
-                (Left, _) => Ok(Self::Move(Direction::Left)),
+                (Down, _) | (Char('n'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Down)),
+                (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::End)),
+                (Home, _) | (Char('a'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Home)),
+                (Left, _) | (Char('b'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Left)),
                 (PageDown, _) => Ok(Self::Move(Direction::PageDown)),
                 (PageUp, _) => Ok(Self::Move(Direction::PageUp)),
-                (Right, _) => Ok(Self::Move(Direction::Right)),
-                (Up, _) => Ok(Self::Move(Direction::Up)),
-                _ => Err(format!("Unrecognized key: {code:?}, modifiers: {modifiers:?}")),
+                (Right, _) | (Char('f'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Right)),
+                (Up, _) | (Char('p'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Up)),
+                _ => Err(format!(
+                    "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
+                )),
             },
             #[allow(clippy::as_conversions)]
             Event::Resize(width16, height16) => Ok(Self::Resize(Size {
