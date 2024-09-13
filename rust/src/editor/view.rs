@@ -37,7 +37,7 @@ impl Default for View {
 impl View {
     pub fn handle_command(&mut self, command: EditorCommand) {
         match command {
-            EditorCommand::Move(direction) => self.move_point(&direction),
+            EditorCommand::Move(direction) => self.move_text_location(&direction),
             EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Quit => {}
         }
@@ -121,50 +121,68 @@ impl View {
         self.buffer.lines.get(row)
     }
 
-    pub fn move_point(&mut self, direction: &Direction) {
-        let Location { mut x, mut y } = self.location;
+    pub fn move_text_location(&mut self, direction: &Direction) {
         // This match moves the position, but does not check for all boundaries.
         // The final boundary checking happens after the match statement.
         match direction {
-            Direction::Left => {
-                if x > 0 {
-                    x = x.saturating_sub(1);
-                } else if y > 0 {
-                    y = y.saturating_sub(1);
-                    x = self.get_line(y).map_or(0, Line::len);
-                }
-                // do nothing if x == 0 and y == 0
-            }
-            Direction::Right => {
-                let line_len = self.get_line(y).map_or(0, Line::len);
-                if x == line_len {
-                    x = 0;
-                    y = y.saturating_add(1);
-                } else {
-                    x = x.saturating_add(1);
-                }
-            }
-            Direction::Up => y = y.saturating_sub(1),
-            Direction::Down => y = y.saturating_add(1),
-            Direction::Home => x = 0,
-            Direction::End => {
-                x = self.get_line(y).map_or(0, Line::len);
-            }
-            Direction::PageUp => {
-                y = y.saturating_sub(self.size.height).saturating_sub(1);
-            }
-            Direction::PageDown => {
-                y = y.saturating_add(self.size.height).saturating_sub(1);
-            }
+            Direction::Left => self.move_left(1),
+            Direction::Right => self.move_right(1),
+            Direction::Up => self.move_up(1),
+            Direction::Down => self.move_down(1),
+            Direction::Home => self.move_to_start_of_line(),
+            Direction::End => self.move_to_end_of_line(),
+            Direction::PageUp => self.move_up(self.size.height.saturating_sub(1)),
+            Direction::PageDown => self.move_down(self.size.height.saturating_sub(1)),
         };
 
-        // snap within bounds
-        x = min(x, self.get_line(y).map_or(0, Line::len));
-        y = min(y, self.buffer.height());
-
-        self.location = Location { x, y };
 
         self.scroll_into_view();
+    }
+    fn move_up(&mut self, step: usize) {
+        self.location.y = self.location.y.saturating_sub(step);
+        self.snap_to_valid_y();
+    }
+    fn move_down(&mut self, step: usize) {
+        self.location.y = self.location.y.saturating_add(step);
+        self.snap_to_valid_x();
+        self.snap_to_valid_y();
+    }
+    fn move_left(&mut self, step: usize) {
+        let Location { mut x, mut y } = self.location;
+        if x > 0 {
+            x = x.saturating_sub(step);
+        } else if y > 0 {
+            y = y.saturating_sub(step);
+            x = self.get_line(y).map_or(0, Line::len);
+        }
+        // do nothing if x == 0 and y == 0
+        self.location = Location { x, y };
+    }
+    fn move_right(&mut self, step: usize) {
+        let Location { mut x, mut y } = self.location;
+        let line_len = self.get_line(y).map_or(0, Line::len);
+        if x == line_len {
+            x = 0;
+            y = y.saturating_add(step);
+        } else {
+            x = x.saturating_add(step);
+        }
+        self.location = Location { x, y };
+    }
+    fn move_to_start_of_line(&mut self) {
+        self.location.x = 0;
+    }
+    fn move_to_end_of_line(&mut self) {
+        self.location.x = self.get_line(self.location.y).map_or(0, Line::len);
+    }
+    fn snap_to_valid_x(&mut self) {
+        self.location.x = min(
+            self.location.x,
+            self.get_line(self.location.y).map_or(0, Line::len),
+        );
+    }
+    fn snap_to_valid_y(&mut self) {
+        self.location.y = min(self.location.y, self.buffer.height());
     }
     fn scroll_into_view(&mut self) {
         let Position { col, row } = self.text_location_to_position();
