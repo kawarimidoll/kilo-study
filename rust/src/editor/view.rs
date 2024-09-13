@@ -167,20 +167,27 @@ impl View {
         self.scroll_into_view();
     }
     fn scroll_into_view(&mut self) {
-        let Location { x, y } = self.location;
-        let Size { width, height } = self.size;
-        if x < self.scroll_offset.col {
-            self.scroll_offset.col = x;
+        let Position { col, row } = self.text_location_to_position();
+        self.scroll_horizontally(col);
+        self.scroll_vertically(row);
+    }
+    fn scroll_horizontally(&mut self, to: usize) {
+        let width = self.size.width;
+        if to < self.scroll_offset.col {
+            self.scroll_offset.col = to;
             self.needs_redraw = true;
-        } else if x >= self.scroll_offset.col.saturating_add(width) {
-            self.scroll_offset.col = x.saturating_sub(width).saturating_add(1);
+        } else if to >= self.scroll_offset.col.saturating_add(width) {
+            self.scroll_offset.col = to.saturating_sub(width).saturating_add(1);
             self.needs_redraw = true;
         }
-        if y < self.scroll_offset.row {
-            self.scroll_offset.row = y;
+    }
+    fn scroll_vertically(&mut self, to: usize) {
+        let height = self.size.height;
+        if to < self.scroll_offset.row {
+            self.scroll_offset.row = to;
             self.needs_redraw = true;
-        } else if y >= self.scroll_offset.row.saturating_add(height) {
-            self.scroll_offset.row = y.saturating_sub(height).saturating_add(1);
+        } else if to >= self.scroll_offset.row.saturating_add(height) {
+            self.scroll_offset.row = to.saturating_sub(height).saturating_add(1);
             self.needs_redraw = true;
         }
     }
