@@ -7,9 +7,9 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    // pub fn len(&self) -> usize {
-    //     self.lines.len()
-    // }
+    pub fn height(&self) -> usize {
+        self.lines.len()
+    }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }

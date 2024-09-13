@@ -151,7 +151,7 @@ impl View {
 
         // snap within bounds
         x = min(x, self.get_line(y).map_or(0, Line::len));
-        y = min(y, self.buffer.lines.len());
+        y = min(y, self.buffer.height());
 
         self.location = Location { x, y };
 
