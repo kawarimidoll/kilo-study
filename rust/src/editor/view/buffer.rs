@@ -13,6 +13,24 @@ impl Buffer {
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }
+    pub fn insert_newline(&mut self, at: Location) -> bool {
+        let Location { x, y } = at;
+        if y >= self.height() {
+            self.lines.insert(self.height(), Line::default());
+            return true;
+        }
+
+        // below here, we have a valid y
+        if x == 0 {
+            self.lines.insert(y, Line::default());
+        } else if x < self.lines[y].len() {
+            let second_half = self.lines[y].split_off(x);
+            self.lines.insert(y.saturating_add(1), second_half);
+        } else {
+            self.lines.insert(y.saturating_add(1), Line::default());
+        }
+        true
+    }
     pub fn remove_char(&mut self, at: Location) -> bool {
         let Location { x, y } = at;
         // out of bounds

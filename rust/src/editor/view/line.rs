@@ -64,6 +64,7 @@ impl TextFragment {
     }
 }
 
+#[derive(Default)]
 pub struct Line {
     fragments: Vec<TextFragment>,
 }
@@ -129,5 +130,9 @@ impl Line {
     }
     pub fn append(&mut self, other: &Self) {
         self.fragments.extend(other.fragments.clone());
+    }
+    pub fn split_off(&mut self, at: usize) -> Self {
+        let after = self.fragments.split_off(at);
+        Self { fragments: after }
     }
 }

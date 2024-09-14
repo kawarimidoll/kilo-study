@@ -40,6 +40,7 @@ impl View {
             EditorCommand::Move(direction) => self.move_text_location(&direction),
             EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Char(c) => self.insert(c),
+            EditorCommand::Enter => self.enter(),
             EditorCommand::Backspace => self.backspace(),
             EditorCommand::Delete => self.delete(),
             EditorCommand::Quit => {}
@@ -47,6 +48,12 @@ impl View {
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
+            self.move_right();
+            self.needs_redraw = true;
+        }
+    }
+    pub fn enter(&mut self) {
+        if self.buffer.insert_newline(self.location) {
             self.move_right();
             self.needs_redraw = true;
         }
