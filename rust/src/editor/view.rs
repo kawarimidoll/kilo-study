@@ -114,7 +114,7 @@ impl View {
         let top = self.scroll_offset.row;
         let left = self.scroll_offset.col;
         let right = left.saturating_add(self.size.width);
-        for current_row in 0..self.size.height.saturating_sub(2) {
+        for current_row in 0..self.size.height {
             let line_text = if let Some(line) = self.get_line(current_row.saturating_add(top)) {
                 &line.get(left..right)
             } else {
