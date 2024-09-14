@@ -29,7 +29,7 @@ impl Editor {
             current_hook(panic_info);
         }));
         Terminal::initialize()?;
-        let mut view = View::default();
+        let mut view = View::new(2);
         let args: Vec<String> = std::env::args().collect();
         let mut status_bar = StatusBar::new(1);
         // only load the first file for now

@@ -22,19 +22,20 @@ pub struct View {
     pub scroll_offset: Position,
 }
 
-impl Default for View {
-    fn default() -> Self {
+impl View {
+    pub fn new(margin_bottom: usize) -> Self {
+        let size = Terminal::size().unwrap_or_default();
         Self {
             buffer: Buffer::default(),
             needs_redraw: true,
-            size: Terminal::size().unwrap_or_default(),
+            size: Size {
+                width: size.width,
+                height: size.height.saturating_sub(margin_bottom),
+            },
             location: Location::default(),
             scroll_offset: Position::default(),
         }
     }
-}
-
-impl View {
     pub fn handle_command(&mut self, command: EditorCommand) {
         match command {
             EditorCommand::Move(direction) => self.move_text_location(direction),
