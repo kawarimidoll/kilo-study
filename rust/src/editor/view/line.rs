@@ -132,6 +132,9 @@ impl Line {
         self.fragments.extend(other.fragments.clone());
     }
     pub fn split_off(&mut self, at: usize) -> Self {
+        if at > self.len() {
+            return Self::default();
+        }
         let after = self.fragments.split_off(at);
         Self { fragments: after }
     }
