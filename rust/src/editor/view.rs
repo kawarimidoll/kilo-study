@@ -52,14 +52,18 @@ impl View {
         }
     }
     pub fn backspace(&mut self) {
-        if self.buffer.remove_char(self.location) {
-            self.move_left();
-            self.needs_redraw = true;
+        let Location { x, y } = self.location;
+        // out of bounds
+        if x == 0 && y == 0 {
+            return;
         }
+        self.move_left();
+        self.delete();
     }
     pub fn delete(&mut self) {
-        self.move_right();
-        self.backspace();
+        if self.buffer.remove_char(self.location) {
+            self.needs_redraw = true;
+        }
     }
     pub fn resize(&mut self, to: Size) {
         self.size = to;

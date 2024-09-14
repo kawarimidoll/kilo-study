@@ -16,16 +16,18 @@ impl Buffer {
     pub fn remove_char(&mut self, at: Location) -> bool {
         let Location { x, y } = at;
         // out of bounds
-        if x == 0 && y == 0 {
-            return false;
-        }
-        if x == 0 {
-            // todo: join with previous line
+        if y >= self.height() {
             return false;
         }
 
         if let Some(line) = self.lines.get_mut(y) {
-            line.remove(x, 1);
+            if x < line.len() {
+                line.remove(x, 1);
+            } else if y < self.height().saturating_sub(1) {
+                // todo: join
+            } else {
+                return false;
+            }
             return true;
         }
 
