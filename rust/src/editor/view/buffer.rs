@@ -1,9 +1,11 @@
 use super::{line::Line, location::Location};
-use std::{fs::read_to_string, io::Error};
+use std::fs::{read_to_string, File};
+use std::io::{Error, Write};
 
 #[derive(Default)]
 pub struct Buffer {
     pub lines: Vec<Line>,
+    pub filename: Option<String>,
 }
 
 impl Buffer {
@@ -73,6 +75,18 @@ impl Buffer {
         for line in contents.lines() {
             lines.push(Line::from(line));
         }
-        Ok(Self { lines })
+        Ok(Self {
+            lines,
+            filename: Some(filename.to_string()),
+        })
+    }
+    pub fn save(&self) -> Result<(), Error> {
+        if let Some(filename) = &self.filename {
+            let mut file = File::create(filename)?;
+            for line in &self.lines {
+                writeln!(file, "{line}")?;
+            }
+        }
+        Ok(())
     }
 }

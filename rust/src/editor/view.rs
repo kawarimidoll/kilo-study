@@ -43,8 +43,12 @@ impl View {
             EditorCommand::Enter => self.enter(),
             EditorCommand::Backspace => self.backspace(),
             EditorCommand::Delete => self.delete(),
+            EditorCommand::Save => self.save(),
             EditorCommand::Quit => {}
         }
+    }
+    pub fn save(&mut self) {
+        let _ = self.buffer.save();
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {

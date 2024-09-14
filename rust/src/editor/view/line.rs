@@ -139,3 +139,14 @@ impl Line {
         Self { fragments: after }
     }
 }
+
+impl std::fmt::Display for Line {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let result: String = self
+            .fragments
+            .iter()
+            .map(|fragment| fragment.grapheme.clone())
+            .collect();
+        write!(formatter, "{result}")
+    }
+}

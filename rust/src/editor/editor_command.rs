@@ -27,6 +27,7 @@ pub enum EditorCommand {
     Delete,
     Enter,
     Quit,
+    Save,
 }
 
 impl TryFrom<Event> for EditorCommand {
@@ -37,6 +38,7 @@ impl TryFrom<Event> for EditorCommand {
                 code, modifiers, ..
             }) => match (code, modifiers) {
                 (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
+                (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
                 (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Char(c)),
                 (Down, _) | (Char('n'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Down)),
                 (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::End)),
