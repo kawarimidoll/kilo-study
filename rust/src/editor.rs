@@ -13,12 +13,15 @@ use view::View;
 mod view;
 use status_bar::StatusBar;
 mod status_bar;
+use message_bar::MessageBar;
+mod message_bar;
 use std::io::Error;
 
 pub struct Editor {
     should_quit: bool,
     view: View,
     status_bar: StatusBar,
+    message_bar: MessageBar,
 }
 
 impl Editor {
@@ -37,10 +40,13 @@ impl Editor {
             view.load(first);
         }
         status_bar.update_status(&view);
+        let mut message_bar = MessageBar::new(0);
+        message_bar.update_message("-------- message bar --------");
         Ok(Self {
             should_quit: false,
             view,
             status_bar,
+            message_bar,
         })
     }
 
@@ -80,6 +86,7 @@ impl Editor {
                         self.view.handle_command(command);
                         if let EditorCommand::Resize(size) = command {
                             self.status_bar.resize(size);
+                            self.message_bar.resize(size);
                         }
                     }
                 }
@@ -97,6 +104,7 @@ impl Editor {
         let _ = Terminal::hide_caret();
         self.view.render();
         self.status_bar.render();
+        self.message_bar.render();
         let _ = Terminal::move_caret_to(self.view.caret_position());
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();

@@ -133,16 +133,7 @@ impl View {
         if self.buffer.is_empty() {
             self.draw_welcome_message();
         }
-        self.render_message_line();
         self.needs_redraw = false;
-    }
-
-
-    pub fn render_message_line(&self) {
-        Self::render_line(
-            self.size.height.saturating_sub(1),
-            "-------- message line --------",
-        );
     }
 
     pub fn caret_position(&self) -> Position {
