@@ -120,4 +120,9 @@ impl Line {
     pub fn insert(&mut self, at: usize, string: &str) {
         self.fragments.splice(at..at, Self::string_to_fragments(string));
     }
+    pub fn remove(&mut self, at: usize, length: usize) {
+        let start = at.saturating_sub(1);
+        let end = start.saturating_add(length);
+        self.fragments.splice(start..end, std::iter::empty());
+    }
 }

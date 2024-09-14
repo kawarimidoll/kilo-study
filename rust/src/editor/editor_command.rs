@@ -1,7 +1,7 @@
 use super::terminal::Size;
 use crossterm::event::{
     Event::{self, Key},
-    KeyCode::{Char, Down, End, Home, Left, PageDown, PageUp, Right, Up},
+    KeyCode::{Backspace, Char, Delete, Down, End, Home, Left, PageDown, PageUp, Right, Up},
     KeyEvent, KeyModifiers,
 };
 use std::convert::TryFrom;
@@ -21,6 +21,8 @@ pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
     Char(char),
+    Backspace,
+    Delete,
     Quit,
 }
 
@@ -41,6 +43,8 @@ impl TryFrom<Event> for EditorCommand {
                 (PageUp, _) => Ok(Self::Move(Direction::PageUp)),
                 (Right, _) | (Char('f'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Right)),
                 (Up, _) | (Char('p'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Up)),
+                (Backspace, _) => Ok(Self::Backspace),
+                (Delete, _) => Ok(Self::Delete),
                 _ => Err(format!(
                     "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
                 )),

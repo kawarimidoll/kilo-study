@@ -40,6 +40,8 @@ impl View {
             EditorCommand::Move(direction) => self.move_text_location(&direction),
             EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Char(c) => self.insert(c),
+            EditorCommand::Backspace => self.backspace(),
+            EditorCommand::Delete => self.delete(),
             EditorCommand::Quit => {}
         }
     }
@@ -48,6 +50,16 @@ impl View {
             self.move_right();
             self.needs_redraw = true;
         }
+    }
+    pub fn backspace(&mut self) {
+        if self.buffer.remove_char(self.location) {
+            self.move_left();
+            self.needs_redraw = true;
+        }
+    }
+    pub fn delete(&mut self) {
+        self.move_right();
+        self.backspace();
     }
     pub fn resize(&mut self, to: Size) {
         self.size = to;

@@ -13,6 +13,24 @@ impl Buffer {
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }
+    pub fn remove_char(&mut self, at: Location) -> bool {
+        let Location { x, y } = at;
+        // out of bounds
+        if x == 0 && y == 0 {
+            return false;
+        }
+        if x == 0 {
+            // todo: join with previous line
+            return false;
+        }
+
+        if let Some(line) = self.lines.get_mut(y) {
+            line.remove(x, 1);
+            return true;
+        }
+
+        false
+    }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
         let Location { x, y } = at;
         // out of bounds
