@@ -2,6 +2,7 @@ use std::ops::Range;
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
+#[derive(Clone)]
 enum GraphemeWidth {
     Half,
     Full,
@@ -22,6 +23,7 @@ impl GraphemeWidth {
     }
 }
 
+#[derive(Clone)]
 struct TextFragment {
     grapheme: String,
     width: GraphemeWidth,
@@ -124,5 +126,8 @@ impl Line {
     pub fn remove(&mut self, start: usize, length: usize) {
         let end = start.saturating_add(length);
         self.fragments.splice(start..end, std::iter::empty());
+    }
+    pub fn append(&mut self, other: &Self) {
+        self.fragments.extend(other.fragments.clone());
     }
 }

@@ -20,18 +20,17 @@ impl Buffer {
             return false;
         }
 
-        if let Some(line) = self.lines.get_mut(y) {
-            if x < line.len() {
-                line.remove(x, 1);
-            } else if y < self.height().saturating_sub(1) {
-                // todo: join
-            } else {
-                return false;
-            }
-            return true;
+        // below here, we have a valid y
+        if x < self.lines[y].len() {
+            self.lines[y].remove(x, 1);
+        } else if y < self.height().saturating_sub(1) {
+            let next_line = self.lines.remove(y.saturating_add(1));
+            self.lines[y].append(&next_line);
+        } else {
+            // the last line, the last character
+            return false;
         }
-
-        false
+        true
     }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
         let Location { x, y } = at;
