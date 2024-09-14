@@ -141,7 +141,7 @@ impl View {
         let filename = self.buffer.filename();
         let height = self.buffer.height();
         let row = self.location.y.saturating_add(1);
-        let modified = if self.buffer.modified {
+        let modified = if self.buffer.dirty > 0 {
             "(modified)"
         } else {
             ""
