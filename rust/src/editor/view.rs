@@ -52,13 +52,13 @@ impl View {
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
-            self.move_right();
+            self.move_text_location(&Direction::Right);
             self.needs_redraw = true;
         }
     }
     pub fn enter(&mut self) {
         if self.buffer.insert_newline(self.location) {
-            self.move_right();
+            self.move_text_location(&Direction::Right);
             self.needs_redraw = true;
         }
     }
@@ -68,7 +68,7 @@ impl View {
         if x == 0 && y == 0 {
             return;
         }
-        self.move_left();
+        self.move_text_location(&Direction::Left);
         self.delete();
     }
     pub fn delete(&mut self) {
@@ -113,7 +113,7 @@ impl View {
         let top = self.scroll_offset.row;
         let left = self.scroll_offset.col;
         let right = left.saturating_add(self.size.width);
-        for current_row in 0..self.size.height.saturating_sub(1) {
+        for current_row in 0..self.size.height.saturating_sub(2) {
             let line_text = if let Some(line) = self.get_line(current_row.saturating_add(top)) {
                 &line.get(left..right)
             } else {
@@ -132,9 +132,40 @@ impl View {
         if self.buffer.is_empty() {
             self.draw_welcome_message();
         }
-        // here comes status line
-        Self::render_line(self.size.height.saturating_sub(1), "--------");
+        self.render_status_line();
+        self.render_message_line();
         self.needs_redraw = false;
+    }
+
+    pub fn render_status_line(&self) {
+        let filename = self.buffer.filename();
+        let height = self.buffer.height();
+        let row = self.location.y.saturating_add(1);
+        let modified = if self.buffer.modified {
+            "(modified)"
+        } else {
+            ""
+        };
+
+        let left = format!("{filename}{modified} -- {height} lines");
+        let right = format!("{row}/{height}");
+        let padding_len = self
+            .size
+            .width
+            .saturating_sub(left.len())
+            .saturating_sub(right.len());
+        let padding = " ".repeat(padding_len);
+        Self::render_line(
+            self.size.height.saturating_sub(2),
+            &format!("{left}{padding}{right}"),
+        );
+    }
+
+    pub fn render_message_line(&self) {
+        Self::render_line(
+            self.size.height.saturating_sub(1),
+            "-------- message line --------",
+        );
     }
 
     pub fn caret_position(&self) -> Position {
@@ -170,6 +201,7 @@ impl View {
         };
 
         self.scroll_into_view();
+        self.render_status_line();
     }
     fn move_up(&mut self, step: usize) {
         self.location.y = self.location.y.saturating_sub(step);

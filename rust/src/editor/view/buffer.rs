@@ -6,11 +6,15 @@ use std::io::{Error, Write};
 pub struct Buffer {
     pub lines: Vec<Line>,
     pub filename: Option<String>,
+    pub modified: bool,
 }
 
 impl Buffer {
     pub fn height(&self) -> usize {
         self.lines.len()
+    }
+    pub fn filename(&self) -> String {
+        self.filename.clone().unwrap_or_else(|| String::from("[no name]"))
     }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
@@ -24,6 +28,7 @@ impl Buffer {
             let second_half = self.lines[y].split_off(x);
             self.lines.insert(y.saturating_add(1), second_half);
         }
+        self.modified = true;
         true
     }
     pub fn remove_char(&mut self, at: Location) -> bool {
@@ -43,6 +48,7 @@ impl Buffer {
             // the last line, the last character
             return false;
         }
+        self.modified = true;
         true
     }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
@@ -57,12 +63,14 @@ impl Buffer {
         // append a new line
         if y == self.height() {
             self.lines.push(Line::from(&string));
+            self.modified = true;
             return true;
         }
 
         // insert a new character in an existing line
         if let Some(line) = self.lines.get_mut(y) {
             line.insert(x, &string);
+            self.modified = true;
             return true;
         }
 
@@ -78,14 +86,16 @@ impl Buffer {
         Ok(Self {
             lines,
             filename: Some(filename.to_string()),
+            modified: false,
         })
     }
-    pub fn save(&self) -> Result<(), Error> {
+    pub fn save(&mut self) -> Result<(), Error> {
         if let Some(filename) = &self.filename {
             let mut file = File::create(filename)?;
             for line in &self.lines {
                 writeln!(file, "{line}")?;
             }
+            self.modified = false;
         }
         Ok(())
     }
