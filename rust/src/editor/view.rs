@@ -37,7 +37,7 @@ impl Default for View {
 impl View {
     pub fn handle_command(&mut self, command: EditorCommand) {
         match command {
-            EditorCommand::Move(direction) => self.move_text_location(&direction),
+            EditorCommand::Move(direction) => self.move_text_location(direction),
             EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Char(c) => self.insert(c),
             EditorCommand::Enter => self.enter(),
@@ -52,13 +52,13 @@ impl View {
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
-            self.move_text_location(&Direction::Right);
+            self.move_text_location(Direction::Right);
             self.needs_redraw = true;
         }
     }
     pub fn enter(&mut self) {
         if self.buffer.insert_newline(self.location) {
-            self.move_text_location(&Direction::Right);
+            self.move_text_location(Direction::Right);
             self.needs_redraw = true;
         }
     }
@@ -68,7 +68,7 @@ impl View {
         if x == 0 && y == 0 {
             return;
         }
-        self.move_text_location(&Direction::Left);
+        self.move_text_location(Direction::Left);
         self.delete();
     }
     pub fn delete(&mut self) {
@@ -186,7 +186,7 @@ impl View {
         self.buffer.lines.get(row)
     }
 
-    pub fn move_text_location(&mut self, direction: &Direction) {
+    pub fn move_text_location(&mut self, direction: Direction) {
         // This match moves the position, but does not check for all boundaries.
         // The final boundary checking happens after the match statement.
         match direction {

@@ -8,6 +8,7 @@ use crossterm::event::{
 };
 use std::convert::TryFrom;
 
+#[derive(Copy, Clone)]
 pub enum Direction {
     Down,
     End,
@@ -19,6 +20,7 @@ pub enum Direction {
     Up,
 }
 
+#[derive(Copy, Clone)]
 pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
