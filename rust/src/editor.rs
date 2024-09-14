@@ -11,11 +11,14 @@ mod terminal;
 use editor_command::EditorCommand;
 use view::View;
 mod view;
+use status_bar::StatusBar;
+mod status_bar;
 use std::io::Error;
 
 pub struct Editor {
     should_quit: bool,
     view: View,
+    status_bar: StatusBar,
 }
 
 impl Editor {
@@ -28,13 +31,16 @@ impl Editor {
         Terminal::initialize()?;
         let mut view = View::default();
         let args: Vec<String> = std::env::args().collect();
+        let mut status_bar = StatusBar::new(1);
         // only load the first file for now
         if let Some(first) = args.get(1) {
             view.load(first);
         }
+        status_bar.update_status(&view);
         Ok(Self {
             should_quit: false,
             view,
+            status_bar,
         })
     }
 
@@ -52,6 +58,7 @@ impl Editor {
                     panic!("Could not read event: {err}");
                 }
             }
+            self.status_bar.update_status(&self.view);
         }
     }
 
@@ -71,6 +78,9 @@ impl Editor {
                         self.should_quit = true;
                     } else {
                         self.view.handle_command(command);
+                        if let EditorCommand::Resize(size) = command {
+                            self.status_bar.resize(size);
+                        }
                     }
                 }
                 Err(err) => {
@@ -86,6 +96,7 @@ impl Editor {
     fn refresh_screen(&mut self) {
         let _ = Terminal::hide_caret();
         self.view.render();
+        self.status_bar.render();
         let _ = Terminal::move_caret_to(self.view.caret_position());
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();

@@ -13,11 +13,6 @@ impl Buffer {
     pub fn height(&self) -> usize {
         self.lines.len()
     }
-    pub fn filename(&self) -> String {
-        self.filename
-            .clone()
-            .unwrap_or_else(|| String::from("[no name]"))
-    }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
     }

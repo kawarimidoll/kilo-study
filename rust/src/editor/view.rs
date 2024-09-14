@@ -132,34 +132,10 @@ impl View {
         if self.buffer.is_empty() {
             self.draw_welcome_message();
         }
-        self.render_status_line();
         self.render_message_line();
         self.needs_redraw = false;
     }
 
-    pub fn render_status_line(&self) {
-        let filename = self.buffer.filename();
-        let height = self.buffer.height();
-        let row = self.location.y.saturating_add(1);
-        let modified = if self.buffer.dirty > 0 {
-            "(modified)"
-        } else {
-            ""
-        };
-
-        let left = format!("{filename}{modified} -- {height} lines");
-        let right = format!("{row}/{height}");
-        let padding_len = self
-            .size
-            .width
-            .saturating_sub(left.len())
-            .saturating_sub(right.len());
-        let padding = " ".repeat(padding_len);
-        Self::render_line(
-            self.size.height.saturating_sub(2),
-            &format!("{left}{padding}{right}"),
-        );
-    }
 
     pub fn render_message_line(&self) {
         Self::render_line(
@@ -201,7 +177,6 @@ impl View {
         };
 
         self.scroll_into_view();
-        self.render_status_line();
     }
     fn move_up(&mut self, step: usize) {
         self.location.y = self.location.y.saturating_sub(step);
