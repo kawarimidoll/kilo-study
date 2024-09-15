@@ -3,7 +3,7 @@ use super::{
     view::View,
 };
 
-#[derive(Default)]
+#[derive(Default, Eq, PartialEq)]
 pub struct DocumentStatus {
     filename: Option<String>,
     total_lines: usize,
@@ -80,8 +80,10 @@ impl StatusBar {
             current_line: view.location.y.saturating_add(1),
             modified: view.buffer.dirty > 0,
         };
-        self.document_status = new_status;
-        self.needs_redraw = true;
+        if self.document_status != new_status{
+            self.document_status = new_status;
+            self.needs_redraw = true;
+        }
     }
 
     pub fn render(&mut self) {
