@@ -115,12 +115,10 @@ impl View {
         let left = self.scroll_offset.col;
         let right = left.saturating_add(self.size.width);
         for current_row in 0..self.size.height {
-            let line_text = if let Some(line) = self.get_line(current_row.saturating_add(top)) {
-                &line.get(left..right)
-            } else {
-                FILLCHAR_EOB
-            };
-            Self::render_line(current_row, line_text);
+            let line_text = self
+                .get_line(current_row.saturating_add(top))
+                .map_or_else(||FILLCHAR_EOB.to_string(), |line| line.get(left..right));
+            Self::render_line(current_row, &line_text);
         }
     }
     pub fn render(&mut self) {
