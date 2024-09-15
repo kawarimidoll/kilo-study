@@ -55,9 +55,16 @@
           cargo run -- "$@"
         '');
       };
+      cargo = {
+        type = "app";
+        buildInputs = with pkgs; [cargo cargo-clippy];
+        program = toString (pkgs.writeShellScript "cargo-run" ''
+          cargo "$@"
+        '');
+      };
       clippy = {
         type = "app";
-        buildInputs = with pkgs; [cargo];
+        buildInputs = with pkgs; [cargo cargo-clippy];
         program = toString (pkgs.writeShellScript "cargo-run" ''
           cargo clippy
         '');
