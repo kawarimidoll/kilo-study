@@ -7,6 +7,7 @@ use crossterm::event::{
 };
 use terminal::Terminal;
 mod editor_command;
+mod file_info;
 mod terminal;
 use editor_command::EditorCommand;
 use view::View;

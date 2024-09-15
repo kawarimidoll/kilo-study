@@ -59,7 +59,7 @@ impl StatusBar {
 
     pub fn update_status(&mut self, view: &View) {
         let new_status = DocumentStatus {
-            filename: view.buffer.filename.clone(),
+            filename: format!("{}", view.buffer.file_info).into(),
             total_lines: view.buffer.height(),
             current_line: view.location.y.saturating_add(1),
             modified: view.buffer.dirty > 0,
