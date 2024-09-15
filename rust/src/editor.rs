@@ -13,6 +13,8 @@ mod terminal;
 use editor_command::EditorCommand;
 use view::View;
 mod view;
+use ui_component::UIComponent;
+mod ui_component;
 use status_bar::StatusBar;
 mod status_bar;
 use message_bar::MessageBar;
