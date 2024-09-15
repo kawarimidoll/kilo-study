@@ -2,6 +2,7 @@ use super::{
     terminal::{Size, Terminal},
     view::View,
 };
+use crossterm::style::Attribute;
 
 #[derive(Default)]
 pub struct DocumentStatus {
@@ -82,7 +83,10 @@ impl StatusBar {
         let padding = " ".repeat(padding_len);
         let mut line_text = format!("{left}{padding}{right}");
         line_text.truncate(self.width);
-        let result = Terminal::print_row(self.position_y, &line_text);
+        let result = Terminal::print_row(
+            self.position_y,
+            &format!("{}{line_text}{}", Attribute::Reverse, Attribute::Reset),
+        );
         debug_assert!(result.is_ok(), "Failed to render status_bar");
         self.needs_redraw = false;
     }
