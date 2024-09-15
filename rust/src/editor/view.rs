@@ -7,11 +7,10 @@ mod location;
 use super::{
     editor_command::{Direction, EditorCommand},
     terminal::{Position, Size, Terminal},
+    NAME, VERSION,
 };
 use location::Location;
 
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 const FILLCHAR_EOB: &str = "~";
 
 pub struct View {

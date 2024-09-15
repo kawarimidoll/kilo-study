@@ -18,6 +18,9 @@ use message_bar::MessageBar;
 mod message_bar;
 use std::io::Error;
 
+const NAME: &str = env!("CARGO_PKG_NAME");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub struct Editor {
     should_quit: bool,
     view: View,
@@ -55,7 +58,8 @@ impl Editor {
 
     pub fn refresh_status(&mut self) {
         self.status_bar.update_status(&self.view);
-        let title = self.status_bar.document_status.filename_string();
+        let filename = self.status_bar.document_status.filename_string();
+        let title = format!("{filename} - {NAME}");
         self.message_bar
             .update_message("-------- message bar --------");
         if title != self.title && Terminal::set_title(&title).is_ok() {
