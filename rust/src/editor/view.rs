@@ -20,6 +20,7 @@ pub struct View {
     pub size: Size,
     pub location: Location,
     pub scroll_offset: Position,
+    pub margin_bottom: usize,
 }
 
 impl View {
@@ -34,6 +35,7 @@ impl View {
             },
             location: Location::default(),
             scroll_offset: Position::default(),
+            margin_bottom,
         }
     }
     pub fn handle_command(&mut self, command: EditorCommand) {
@@ -78,7 +80,10 @@ impl View {
         }
     }
     pub fn resize(&mut self, to: Size) {
-        self.size = to;
+        self.size = Size {
+            width: to.width,
+            height: to.height.saturating_sub(self.margin_bottom),
+        };
         self.scroll_into_view();
         self.needs_redraw = true;
     }
@@ -117,7 +122,7 @@ impl View {
         for current_row in 0..self.size.height {
             let line_text = self
                 .get_line(current_row.saturating_add(top))
-                .map_or_else(||FILLCHAR_EOB.to_string(), |line| line.get(left..right));
+                .map_or_else(|| FILLCHAR_EOB.to_string(), |line| line.get(left..right));
             Self::render_line(current_row, &line_text);
         }
     }
