@@ -37,26 +37,39 @@ pub struct StatusBar {
     pub width: usize,
     pub margin_bottom: usize,
     pub position_y: usize,
+    pub is_visible: bool,
 }
 
 impl StatusBar {
     pub fn new(margin_bottom: usize) -> Self {
-        let Size { width, height } = Terminal::size().unwrap_or_default();
-        Self {
+        let size = Terminal::size().unwrap_or_default();
+        let mut status_bar = Self {
             document_status: DocumentStatus::default(),
             needs_redraw: true,
-            width,
+            width: size.width,
             margin_bottom,
-            position_y: height.saturating_sub(margin_bottom).saturating_sub(1),
-        }
+            position_y: 0,
+            is_visible: false,
+        };
+        status_bar.resize(size);
+        status_bar
     }
 
     pub fn resize(&mut self, to: Size) {
         self.width = to.width;
-        self.position_y = to
+
+        // if height - mergin_bottom - 1 < 0, then the status bar is not visible
+        if let Some(position_y) = to
             .height
-            .saturating_sub(self.margin_bottom)
-            .saturating_sub(1);
+            .checked_sub(self.margin_bottom)
+            .and_then(|height| height.checked_sub(1))
+        {
+            self.position_y = position_y;
+            self.is_visible = true;
+        } else {
+            self.position_y = 0;
+            self.is_visible = false;
+        }
         self.needs_redraw = true;
     }
 
@@ -72,7 +85,7 @@ impl StatusBar {
     }
 
     pub fn render(&mut self) {
-        if !self.needs_redraw {
+        if !self.needs_redraw || !self.is_visible {
             return;
         }
 
