@@ -2,7 +2,6 @@ use super::{
     terminal::{Size, Terminal},
     view::View,
 };
-use crossterm::style::Attribute;
 
 #[derive(Default)]
 pub struct DocumentStatus {
@@ -18,13 +17,13 @@ impl DocumentStatus {
             .clone()
             .unwrap_or_else(|| String::from("[No Name]"));
         let modified = if self.modified { "(modified)" } else { "" };
-        return format!("{filename}{modified}");
+        format!("{filename}{modified}")
     }
     pub fn total_lines_string(&self) -> String {
-        return format!("{} lines", self.total_lines);
+        format!("{} lines", self.total_lines)
     }
     pub fn position_string(&self) -> String {
-        return format!("{}/{}", self.current_line, self.total_lines);
+        format!("{}/{}", self.current_line, self.total_lines)
     }
 }
 
@@ -78,17 +77,11 @@ impl StatusBar {
 
         let left = format!("{filename_string} - {total_lines_string}");
         let right = self.document_status.position_string();
-        let padding_len = self
-            .width
-            .saturating_sub(left.len())
-            .saturating_sub(right.len());
-        let padding = " ".repeat(padding_len);
-        let mut line_text = format!("{left}{padding}{right}");
+        // minus 1 for the space between left and right
+        let reminder_len = self.width.saturating_sub(left.len()).saturating_sub(1);
+        let mut line_text = format!("{left} {right:>reminder_len$}");
         line_text.truncate(self.width);
-        let result = Terminal::print_row(
-            self.position_y,
-            &format!("{}{line_text}{}", Attribute::Reverse, Attribute::Reset),
-        );
+        let result = Terminal::print_invert_row(self.position_y, &line_text);
         debug_assert!(result.is_ok(), "Failed to render status_bar");
         self.needs_redraw = false;
     }

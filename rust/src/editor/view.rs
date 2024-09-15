@@ -110,7 +110,7 @@ impl View {
             if display_width < message.len() {
                 Self::render_line(row, FILLCHAR_EOB);
             } else {
-                message = format!("{FILLCHAR_EOB:<1}{:^display_width$}", message);
+                message = format!("{FILLCHAR_EOB:<1}{message:^display_width$}");
                 message.truncate(self.size.width.saturating_sub(1));
                 Self::render_line(row, &message);
             }

@@ -1,5 +1,5 @@
 use crossterm::cursor::{Hide, MoveTo, Show};
-use crossterm::style::Print;
+use crossterm::style::{Attribute, Print};
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, size, Clear, ClearType, EnterAlternateScreen,
     LeaveAlternateScreen,
@@ -92,6 +92,19 @@ impl Terminal {
         Self::clear_line()?;
         Self::print(line_text)?;
         Ok(())
+    }
+    pub fn print_invert_row(row: usize, line_text: &str) -> Result<(), Error> {
+        let width = Self::size()?.width;
+        Self::print_row(
+            row,
+            &format!(
+                "{}{line_text:width$.width$}{}",
+                // :width$ -> pad to width
+                // .width$ -> truncate to width
+                Attribute::Reverse,
+                Attribute::Reset,
+            ),
+        )
     }
     /// Returns the current size of this Terminal.
     /// Edge Case for systems with `usize` < `u16`
