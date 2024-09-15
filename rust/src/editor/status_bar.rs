@@ -11,6 +11,22 @@ pub struct DocumentStatus {
     current_line: usize,
     modified: bool,
 }
+impl DocumentStatus {
+    pub fn filename_string(&self) -> String {
+        let filename = self
+            .filename
+            .clone()
+            .unwrap_or_else(|| String::from("[No Name]"));
+        let modified = if self.modified { "(modified)" } else { "" };
+        return format!("{filename}{modified}");
+    }
+    pub fn total_lines_string(&self) -> String {
+        return format!("{} lines", self.total_lines);
+    }
+    pub fn position_string(&self) -> String {
+        return format!("{}/{}", self.current_line, self.total_lines);
+    }
+}
 
 pub struct StatusBar {
     pub document_status: DocumentStatus,
@@ -56,26 +72,12 @@ impl StatusBar {
         if !self.needs_redraw {
             return;
         }
-        let DocumentStatus {
-            total_lines,
-            current_line,
-            ..
-        } = self.document_status;
 
-        let filename = self
-            .document_status
-            .filename
-            .clone()
-            .unwrap_or_else(|| String::from("[no name]"));
+        let filename_string = self.document_status.filename_string();
+        let total_lines_string = self.document_status.total_lines_string();
 
-        let modified = if self.document_status.modified {
-            "(modified)"
-        } else {
-            ""
-        };
-
-        let left = format!("{filename}{modified} -- {total_lines} lines");
-        let right = format!("{current_line}/{total_lines}");
+        let left = format!("{filename_string} - {total_lines_string}");
+        let right = self.document_status.position_string();
         let padding_len = self
             .width
             .saturating_sub(left.len())
