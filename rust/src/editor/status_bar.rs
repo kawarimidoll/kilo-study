@@ -31,45 +31,16 @@ impl DocumentStatus {
     }
 }
 
+#[derive(Default)]
 pub struct StatusBar {
     pub document_status: DocumentStatus,
     pub needs_redraw: bool,
     pub width: usize,
-    pub margin_bottom: usize,
-    pub position_y: usize,
-    pub is_visible: bool,
 }
 
 impl StatusBar {
-    pub fn new(margin_bottom: usize) -> Self {
-        let size = Terminal::size().unwrap_or_default();
-        let mut status_bar = Self {
-            document_status: DocumentStatus::default(),
-            needs_redraw: true,
-            width: size.width,
-            margin_bottom,
-            position_y: 0,
-            is_visible: false,
-        };
-        status_bar.resize(size);
-        status_bar
-    }
-
     pub fn resize(&mut self, to: Size) {
         self.width = to.width;
-
-        // if height - mergin_bottom - 1 < 0, then the status bar is not visible
-        if let Some(position_y) = to
-            .height
-            .checked_sub(self.margin_bottom)
-            .and_then(|height| height.checked_sub(1))
-        {
-            self.position_y = position_y;
-            self.is_visible = true;
-        } else {
-            self.position_y = 0;
-            self.is_visible = false;
-        }
         self.needs_redraw = true;
     }
 
@@ -80,14 +51,14 @@ impl StatusBar {
             current_line: view.location.y.saturating_add(1),
             modified: view.buffer.dirty > 0,
         };
-        if self.document_status != new_status{
+        if self.document_status != new_status {
             self.document_status = new_status;
             self.needs_redraw = true;
         }
     }
 
-    pub fn render(&mut self) {
-        if !self.needs_redraw || !self.is_visible {
+    pub fn render(&mut self, position_y: usize) {
+        if !self.needs_redraw {
             return;
         }
 
@@ -101,7 +72,7 @@ impl StatusBar {
         let reminder_len = self.width.saturating_sub(left.len()).saturating_sub(1);
         let mut line_text = format!("{left} {right:>reminder_len$}");
         line_text.truncate(self.width);
-        let result = Terminal::print_invert_row(self.position_y, &line_text);
+        let result = Terminal::print_invert_row(position_y, &line_text);
         debug_assert!(result.is_ok(), "Failed to render status_bar");
         self.needs_redraw = false;
     }
