@@ -98,16 +98,22 @@ impl View {
             "Welcome!".to_string(),
             format!("{NAME} editor -- version {VERSION}"),
         ];
+        if messages.len() > self.size.height {
+            return;
+        }
+        let display_width = self.size.width.saturating_sub(1);
 
         // we don't care if our welcome message is put *exactly* in the middle.
         #[allow(clippy::integer_division)]
         let mut row = self.size.height / 3;
         for mut message in messages {
-            #[allow(clippy::integer_division)]
-            let col = self.size.width.saturating_sub(message.len()) / 2;
-            message = format!("{FILLCHAR_EOB}{}{}", " ".repeat(col), message);
-            message.truncate(self.size.width.saturating_sub(1));
-            Self::render_line(row, &message);
+            if display_width < message.len() {
+                Self::render_line(row, FILLCHAR_EOB);
+            } else {
+                message = format!("{FILLCHAR_EOB:<1}{:^display_width$}", message);
+                message.truncate(self.size.width.saturating_sub(1));
+                Self::render_line(row, &message);
+            }
             row = row.saturating_add(1);
         }
     }
