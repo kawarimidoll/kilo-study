@@ -76,6 +76,10 @@ impl Terminal {
         Self::queue_command(EnableLineWrap)?;
         Ok(())
     }
+    pub fn set_title(title: &str) -> Result<(), Error> {
+        Self::queue_command(SetTitle(title))?;
+        Ok(())
+    }
     /// Moves the caret to the given Position.
     /// # Arguments
     /// * `Position` - the `Poisition` to move the caret to. Will be truncated to `u16::MAX` if

@@ -23,6 +23,7 @@ pub struct Editor {
     view: View,
     status_bar: StatusBar,
     message_bar: MessageBar,
+    title: String,
 }
 
 impl Editor {
@@ -35,20 +36,31 @@ impl Editor {
         Terminal::initialize()?;
         let mut view = View::new(2);
         let args: Vec<String> = std::env::args().collect();
-        let mut status_bar = StatusBar::new(1);
+        let status_bar = StatusBar::new(1);
         // only load the first file for now
         if let Some(first) = args.get(1) {
             view.load(first);
         }
-        status_bar.update_status(&view);
-        let mut message_bar = MessageBar::new(0);
-        message_bar.update_message("-------- message bar --------");
-        Ok(Self {
+        let message_bar = MessageBar::new(0);
+        let mut editor = Self {
             should_quit: false,
             view,
             status_bar,
             message_bar,
-        })
+            title: String::default(),
+        };
+        editor.refresh_status();
+        Ok(editor)
+    }
+
+    pub fn refresh_status(&mut self) {
+        self.status_bar.update_status(&self.view);
+        let title = self.status_bar.document_status.filename_string();
+        self.message_bar
+            .update_message("-------- message bar --------");
+        if title != self.title && Terminal::set_title(&title).is_ok() {
+            self.title = title;
+        }
     }
 
     pub fn run(&mut self) {

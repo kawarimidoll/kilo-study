@@ -12,12 +12,16 @@ pub struct DocumentStatus {
 }
 impl DocumentStatus {
     pub fn filename_string(&self) -> String {
-        let filename = self
-            .filename
+        self.filename
             .clone()
-            .unwrap_or_else(|| String::from("[No Name]"));
-        let modified = if self.modified { "(modified)" } else { "" };
-        format!("{filename}{modified}")
+            .unwrap_or_else(|| String::from("[No Name]"))
+    }
+    pub fn modified_string(&self) -> String {
+        if self.modified {
+            String::from("(modified)")
+        } else {
+            String::default()
+        }
     }
     pub fn total_lines_string(&self) -> String {
         format!("{} lines", self.total_lines)
@@ -73,9 +77,10 @@ impl StatusBar {
         }
 
         let filename_string = self.document_status.filename_string();
+        let modified_string = self.document_status.modified_string();
         let total_lines_string = self.document_status.total_lines_string();
 
-        let left = format!("{filename_string} - {total_lines_string}");
+        let left = format!("{filename_string}{modified_string} - {total_lines_string}");
         let right = self.document_status.position_string();
         // minus 1 for the space between left and right
         let reminder_len = self.width.saturating_sub(left.len()).saturating_sub(1);
