@@ -76,7 +76,7 @@ impl Editor {
         let filename = self.status_bar.document_status.filename_string();
         let title = format!("{filename} - {NAME}");
         self.message_bar
-            .update_message("HELP: Ctrl-S = save | Ctrl-Q = quit".to_string());
+            .update_message("HELP: Ctrl-S = save | Ctrl-Q = quit");
         if title != self.title && Terminal::set_title(&title).is_ok() {
             self.title = title;
         }

@@ -38,8 +38,8 @@ pub struct MessageBar {
 }
 
 impl MessageBar {
-    pub fn update_message(&mut self, new_message: String) {
-        self.message = Message::new(new_message);
+    pub fn update_message(&mut self, new_message: &str) {
+        self.message = Message::new(new_message.to_string());
         self.cleared_after_expiry = false;
         self.set_needs_redraw(true);
     }
