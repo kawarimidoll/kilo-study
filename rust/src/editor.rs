@@ -115,15 +115,12 @@ impl Editor {
         };
         if should_process {
             match EditorCommand::try_from(event) {
-                Ok(command) => {
-                    if matches!(command, EditorCommand::Quit) {
-                        self.should_quit = true;
-                    } else if let EditorCommand::Resize(size) = command {
-                        self.resize(size);
-                    } else {
-                        self.view.handle_command(command);
-                    }
-                }
+                Ok(command) => match command {
+                    EditorCommand::Quit => self.should_quit = true,
+                    EditorCommand::Resize(size) => self.resize(size),
+                    EditorCommand::Save => self.handle_save(),
+                    _ => self.view.handle_command(command),
+                },
                 Err(err) => {
                     #[cfg(debug_assertions)]
                     panic!("Could not evaluate command: {err}");
@@ -133,6 +130,14 @@ impl Editor {
             #[cfg(debug_assertions)]
             panic!("Received and discarded unsupported or non-press event.");
         }
+    }
+    fn handle_save(&mut self) {
+        let message = if self.view.save().is_ok() {
+            "File saved successfully"
+        } else {
+            "Error saving file"
+        };
+        self.message_bar.update_message(message);
     }
     fn refresh_screen(&mut self) {
         if self.terminal_size.width == 0 || self.terminal_size.height == 0 {

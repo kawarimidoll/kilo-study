@@ -32,12 +32,12 @@ impl View {
             EditorCommand::Enter => self.enter(),
             EditorCommand::Backspace => self.backspace(),
             EditorCommand::Delete => self.delete(),
-            EditorCommand::Save => self.save(),
-            EditorCommand::Resize(_) | EditorCommand::Quit => {}
+            // other commands are already handled by the editor
+            _=> {}
         }
     }
-    pub fn save(&mut self) {
-        let _ = self.buffer.save();
+    pub fn save(&mut self) -> Result<(), Error> {
+        self.buffer.save()
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
@@ -65,11 +65,11 @@ impl View {
             self.needs_redraw = true;
         }
     }
-    pub fn load(&mut self, filename: &str) {
-        if let Ok(buffer) = Buffer::load(filename) {
-            self.buffer = buffer;
-            self.needs_redraw = true;
-        }
+    pub fn load(&mut self, filename: &str) -> Result<(), Error> {
+        let buffer = Buffer::load(filename)?;
+        self.buffer = buffer;
+        self.needs_redraw = true;
+        Ok(())
     }
     fn draw_welcome_message(&self) {
         let messages = vec![
