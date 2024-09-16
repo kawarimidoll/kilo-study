@@ -28,9 +28,9 @@ impl View {
     pub fn handle_command(&mut self, command: EditorCommand) {
         match command {
             EditorCommand::Move(direction) => self.move_text_location(direction),
-            EditorCommand::Char(c) => self.insert(c),
-            EditorCommand::Enter => self.enter(),
-            EditorCommand::Backspace => self.backspace(),
+            EditorCommand::Insert(c) => self.insert(c),
+            EditorCommand::InsertNewLine => self.enter(),
+            EditorCommand::DeleteBackward => self.backspace(),
             EditorCommand::Delete => self.delete(),
             // other commands are already handled by the editor
             _=> {}
@@ -126,8 +126,8 @@ impl View {
             Direction::Right => self.move_right(),
             Direction::Up => self.move_up(1),
             Direction::Down => self.move_down(1),
-            Direction::Home => self.move_to_start_of_line(),
-            Direction::End => self.move_to_end_of_line(),
+            Direction::StartOfLine => self.move_to_start_of_line(),
+            Direction::EndOfLine => self.move_to_end_of_line(),
             Direction::PageUp => self.move_up(self.size.height.saturating_sub(1)),
             Direction::PageDown => self.move_down(self.size.height.saturating_sub(1)),
         };

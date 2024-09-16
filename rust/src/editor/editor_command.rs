@@ -11,8 +11,8 @@ use std::convert::TryFrom;
 #[derive(Copy, Clone)]
 pub enum Direction {
     Down,
-    End,
-    Home,
+    EndOfLine,
+    StartOfLine,
     Left,
     PageDown,
     PageUp,
@@ -24,10 +24,10 @@ pub enum Direction {
 pub enum EditorCommand {
     Move(Direction),
     Resize(Size),
-    Char(char),
-    Backspace,
+    Insert(char),
+    InsertNewLine,
+    DeleteBackward,
     Delete,
-    Enter,
     Quit,
     Save,
 }
@@ -41,19 +41,19 @@ impl TryFrom<Event> for EditorCommand {
             }) => match (code, modifiers) {
                 (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
                 (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
-                (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Char(c)),
+                (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Insert(c)),
                 (Down, _) | (Char('n'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Down)),
-                (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::End)),
-                (Home, _) | (Char('a'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Home)),
+                (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::EndOfLine)),
+                (Home, _) | (Char('a'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::StartOfLine)),
                 (Left, _) | (Char('b'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Left)),
                 (PageDown, _) => Ok(Self::Move(Direction::PageDown)),
                 (PageUp, _) => Ok(Self::Move(Direction::PageUp)),
                 (Right, _) | (Char('f'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Right)),
                 (Up, _) | (Char('p'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Up)),
-                (Backspace, _) => Ok(Self::Backspace),
+                (Backspace, _) => Ok(Self::DeleteBackward),
                 (Delete, _) => Ok(Self::Delete),
-                (Enter, _) => Ok(Self::Enter),
-                (Tab, _) => Ok(Self::Char('\t')),
+                (Enter, _) => Ok(Self::InsertNewLine),
+                (Tab, _) => Ok(Self::Insert('\t')),
                 _ => Err(format!(
                     "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
                 )),
