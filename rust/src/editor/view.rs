@@ -1,12 +1,14 @@
 use buffer::Buffer;
 use line::Line;
 use std::cmp::min;
+use std::io::Error;
 mod buffer;
 mod line;
 mod location;
 use super::{
     editor_command::{Direction, EditorCommand},
     terminal::{Position, Size, Terminal},
+    ui_component::UIComponent,
     NAME, VERSION,
 };
 use location::Location;
@@ -20,20 +22,18 @@ pub struct View {
     pub size: Size,
     pub location: Location,
     pub scroll_offset: Position,
-    pub margin_bottom: usize,
 }
 
 impl View {
     pub fn handle_command(&mut self, command: EditorCommand) {
         match command {
             EditorCommand::Move(direction) => self.move_text_location(direction),
-            EditorCommand::Resize(size) => self.resize(size),
             EditorCommand::Char(c) => self.insert(c),
             EditorCommand::Enter => self.enter(),
             EditorCommand::Backspace => self.backspace(),
             EditorCommand::Delete => self.delete(),
             EditorCommand::Save => self.save(),
-            EditorCommand::Quit => {}
+            EditorCommand::Resize(_) | EditorCommand::Quit => {}
         }
     }
     pub fn save(&mut self) {
@@ -64,14 +64,6 @@ impl View {
         if self.buffer.remove_char(self.location) {
             self.needs_redraw = true;
         }
-    }
-    pub fn resize(&mut self, to: Size) {
-        self.size = Size {
-            width: to.width,
-            height: to.height.saturating_sub(self.margin_bottom),
-        };
-        self.scroll_into_view();
-        self.needs_redraw = true;
     }
     pub fn load(&mut self, filename: &str) {
         if let Ok(buffer) = Buffer::load(filename) {
@@ -106,29 +98,6 @@ impl View {
     fn render_line(row: usize, line_text: &str) {
         let result = Terminal::print_row(row, line_text);
         debug_assert!(result.is_ok(), "Failed to render line");
-    }
-    pub fn render_buffer(&self) {
-        let top = self.scroll_offset.row;
-        let left = self.scroll_offset.col;
-        let right = left.saturating_add(self.size.width);
-        for current_row in 0..self.size.height {
-            let line_text = self
-                .get_line(current_row.saturating_add(top))
-                .map_or_else(|| FILLCHAR_EOB.to_string(), |line| line.get(left..right));
-            Self::render_line(current_row, &line_text);
-        }
-    }
-    pub fn render(&mut self) {
-        // render function
-        if !self.needs_redraw || self.size.width == 0 || self.size.height == 0 {
-            return;
-        }
-        let _ = Terminal::move_caret_to(Position::default());
-        self.render_buffer();
-        if self.buffer.is_empty() {
-            self.draw_welcome_message();
-        }
-        self.needs_redraw = false;
     }
 
     pub fn caret_position(&self) -> Position {
@@ -231,5 +200,36 @@ impl View {
             self.scroll_offset.row = to.saturating_sub(height).saturating_add(1);
             self.needs_redraw = true;
         }
+    }
+}
+
+impl UIComponent for View {
+    fn mark_redraw(&mut self, value: bool) {
+        self.needs_redraw = value;
+    }
+    fn needs_redraw(&self) -> bool {
+        self.needs_redraw
+    }
+    fn set_size(&mut self, to: Size) {
+        self.size = to;
+        self.scroll_into_view();
+    }
+    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
+        let _ = Terminal::move_caret_to(Position::default());
+        let Size { width, height } = self.size;
+        let top = self.scroll_offset.row.saturating_sub(origin_y);
+        let left = self.scroll_offset.col;
+        let right = left.saturating_add(width);
+        let end_y = origin_y.saturating_add(height);
+        for current_row in origin_y..end_y {
+            let line_text = self
+                .get_line(current_row.saturating_add(top))
+                .map_or_else(|| FILLCHAR_EOB.to_string(), |line| line.get(left..right));
+            Self::render_line(current_row, &line_text);
+        }
+        if self.buffer.is_empty() {
+            self.draw_welcome_message();
+        }
+        Ok(())
     }
 }

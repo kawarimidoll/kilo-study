@@ -141,7 +141,7 @@ impl Editor {
             let terminal_origin = self.terminal_size.height.saturating_sub(2);
             self.status_bar.render(terminal_origin);
             if self.terminal_size.height > 2 {
-                self.view.render();
+                self.view.render(0);
             }
         }
 

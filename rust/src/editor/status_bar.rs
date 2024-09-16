@@ -1,7 +1,9 @@
 use super::{
     terminal::{Size, Terminal},
+    ui_component::UIComponent,
     view::View,
 };
+use std::io::Error;
 
 #[derive(Default, Eq, PartialEq)]
 pub struct DocumentStatus {
@@ -39,11 +41,6 @@ pub struct StatusBar {
 }
 
 impl StatusBar {
-    pub fn resize(&mut self, to: Size) {
-        self.width = to.width;
-        self.needs_redraw = true;
-    }
-
     pub fn update_status(&mut self, view: &View) {
         let new_status = DocumentStatus {
             filename: format!("{}", view.buffer.file_info).into(),
@@ -53,15 +50,22 @@ impl StatusBar {
         };
         if self.document_status != new_status {
             self.document_status = new_status;
-            self.needs_redraw = true;
+            self.mark_redraw(true);
         }
     }
+}
 
-    pub fn render(&mut self, position_y: usize) {
-        if !self.needs_redraw {
-            return;
-        }
-
+impl UIComponent for StatusBar {
+    fn mark_redraw(&mut self, value: bool) {
+        self.needs_redraw = value;
+    }
+    fn needs_redraw(&self) -> bool {
+        self.needs_redraw
+    }
+    fn set_size(&mut self, to: Size) {
+        self.width = to.width;
+    }
+    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
         let filename_string = self.document_status.filename_string();
         let modified_string = self.document_status.modified_string();
         let total_lines_string = self.document_status.total_lines_string();
@@ -72,8 +76,8 @@ impl StatusBar {
         let reminder_len = self.width.saturating_sub(left.len()).saturating_sub(1);
         let mut line_text = format!("{left} {right:>reminder_len$}");
         line_text.truncate(self.width);
-        let result = Terminal::print_invert_row(position_y, &line_text);
+        let result = Terminal::print_invert_row(origin_y, &line_text);
         debug_assert!(result.is_ok(), "Failed to render status_bar");
-        self.needs_redraw = false;
+        Ok(())
     }
 }

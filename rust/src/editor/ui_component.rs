@@ -22,7 +22,7 @@ pub trait UIComponent {
             return;
         }
         match self.draw(origin_y) {
-            Ok(_) => self.mark_redraw(false),
+            Ok(()) => self.mark_redraw(false),
             Err(err) => {
                 #[cfg(debug_assertions)]
                 {
