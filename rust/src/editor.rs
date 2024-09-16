@@ -27,6 +27,8 @@ use std::io::Error;
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+const QUIT_COUNT: u8 = 2;
+
 #[derive(Default)]
 pub struct Editor {
     should_quit: bool,
@@ -35,6 +37,7 @@ pub struct Editor {
     message_bar: MessageBar,
     terminal_size: Size,
     title: String,
+    quit_count: u8,
 }
 
 impl Editor {
@@ -47,6 +50,7 @@ impl Editor {
         Terminal::initialize()?;
 
         let mut editor = Self::default();
+        editor.reset_quit_count();
 
         let args: Vec<String> = std::env::args().collect();
         // only load the first file for now
@@ -131,11 +135,33 @@ impl Editor {
     }
     fn process_command(&mut self, command: Command) {
         match command {
-            System(Quit) => self.should_quit = true,
+            System(Quit) => self.handle_quit(),
             System(Resize(size)) => self.resize(size),
+            _ => self.reset_quit_count(),
+        }
+        match command {
+            // already handled above
+            System(Quit) | System(Resize(_)) => {}
             System(Save) => self.handle_save(),
             Edit(command) => self.view.handle_edit_command(command),
             Move(command) => self.view.handle_move_command(command),
+        }
+    }
+    fn handle_quit(&mut self) {
+        if self.view.buffer.dirty == 0 || self.quit_count == 0 {
+            self.should_quit = true;
+        } else if self.view.buffer.dirty > 0 {
+            self.message_bar.update_message(&format!(
+                "Unsaved changes. Press Ctrl-Q {} more times to quit.",
+                self.quit_count,
+            ));
+            self.quit_count -= 1;
+        }
+    }
+    fn reset_quit_count(&mut self) {
+        if self.quit_count < QUIT_COUNT {
+            self.quit_count = QUIT_COUNT;
+            self.message_bar.update_message("");
         }
     }
     fn handle_save(&mut self) {
