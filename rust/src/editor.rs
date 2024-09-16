@@ -13,7 +13,7 @@ mod terminal;
 use editor_command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewLine,
-    System::{Quit, Resize, Save},
+    System::{Dismiss, Quit, Resize, Save},
 };
 use view::View;
 mod view;
@@ -158,6 +158,13 @@ impl Editor {
                     self.handle_save();
                 }
             }
+            System(Dismiss) => {
+                if self.command_bar.is_some() {
+                    self.dismiss_prompt();
+                    self.message_bar.update_message("Save aborted.");
+                    self.message_bar.set_needs_redraw(true);
+                }
+            }
             Edit(command) => {
                 if let Some(command_bar) = &mut self.command_bar {
                     if matches!(command, InsertNewLine) {
@@ -177,6 +184,7 @@ impl Editor {
     }
     fn dismiss_prompt(&mut self) {
         self.command_bar = None;
+        self.message_bar.set_needs_redraw(true);
     }
     fn handle_quit(&mut self) {
         if self.view.buffer.dirty == 0 || self.quit_count == 0 {
@@ -203,6 +211,7 @@ impl Editor {
             height: 1,
         };
         command_bar.set_size(bar_size);
+        command_bar.set_needs_redraw(true);
         self.command_bar = Some(command_bar);
     }
     fn handle_save(&mut self) {

@@ -2,7 +2,8 @@ use super::terminal::Size;
 use crossterm::event::{
     Event::{self, Key},
     KeyCode::{
-        Backspace, Char, Delete, Down, End, Enter, Home, Left, PageDown, PageUp, Right, Tab, Up,
+        Backspace, Char, Delete, Down, End, Enter, Esc, Home, Left, PageDown, PageUp, Right, Tab,
+        Up,
     },
     KeyEvent, KeyModifiers,
 };
@@ -73,6 +74,7 @@ pub enum System {
     Resize(Size),
     Quit,
     Save,
+    Dismiss,
 }
 
 impl TryFrom<KeyEvent> for System {
@@ -84,6 +86,7 @@ impl TryFrom<KeyEvent> for System {
         match (code, modifiers) {
             (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
             (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
+            (Esc, KeyModifiers::NONE) => Ok(Self::Dismiss),
             _ => Err(format!(
                 "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
             )),

@@ -24,6 +24,9 @@ impl CommandBar {
     fn insert(&mut self, c: char) {
         self.value.push(c);
     }
+    fn delete_backward(&mut self) {
+        self.value.pop();
+    }
     pub fn caret_col(&self) -> usize {
         let max_width = self.prompt.len().saturating_add(self.value.len());
         min(max_width, self.size.width)
