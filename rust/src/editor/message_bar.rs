@@ -19,7 +19,7 @@ impl MessageBar {
 }
 
 impl UIComponent for MessageBar {
-    fn mark_redraw(&mut self, value: bool) {
+    fn set_needs_redraw(&mut self, value: bool) {
         self.needs_redraw = value;
     }
     fn needs_redraw(&self) -> bool {

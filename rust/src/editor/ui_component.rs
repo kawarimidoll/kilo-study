@@ -3,7 +3,7 @@ use std::io::Error;
 
 pub trait UIComponent {
     // Marks this component as in need of redrawing or not
-    fn mark_redraw(&mut self, value: bool);
+    fn set_needs_redraw(&mut self, value: bool);
     // Determines if a component needs to be rdrawn or not
     fn needs_redraw(&self) -> bool;
     // Sets the size of the component
@@ -13,7 +13,7 @@ pub trait UIComponent {
 
     fn resize(&mut self, to: Size) {
         self.set_size(to);
-        self.mark_redraw(true);
+        self.set_needs_redraw(true);
     }
 
     // Renders the component
@@ -22,7 +22,7 @@ pub trait UIComponent {
             return;
         }
         match self.draw(origin_y) {
-            Ok(()) => self.mark_redraw(false),
+            Ok(()) => self.set_needs_redraw(false),
             Err(err) => {
                 #[cfg(debug_assertions)]
                 {
