@@ -36,6 +36,9 @@ impl View {
     pub fn save(&mut self) -> Result<(), Error> {
         self.buffer.save()
     }
+    pub fn save_as(&mut self, filename: &str) -> Result<(), Error> {
+        self.buffer.save_as(filename)
+    }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
             self.handle_move_command(Move::Right);

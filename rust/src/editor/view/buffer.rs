@@ -89,6 +89,14 @@ impl Buffer {
         })
     }
     pub fn save(&mut self) -> Result<(), Error> {
+        self.save_to_file()
+    }
+    pub fn save_as(&mut self, filename: &str) -> Result<(), Error> {
+        let file_info = FileInfo::from(filename);
+        self.file_info = file_info;
+        self.save_to_file()
+    }
+    pub fn save_to_file(&mut self) -> Result<(), Error> {
         if let Some(path) = &self.file_info.path {
             let mut file = File::create(path)?;
             for line in &self.lines {

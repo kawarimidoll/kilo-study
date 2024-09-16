@@ -165,7 +165,13 @@ impl Editor {
         }
     }
     fn handle_save(&mut self) {
-        let message = if self.view.save().is_ok() {
+        let save_result = if self.view.buffer.file_info.path.is_none() {
+            self.view.save_as("untitled.txt")
+        } else {
+            self.view.save()
+        };
+
+        let message = if save_result.is_ok() {
             "File saved successfully"
         } else {
             "Error saving file"
