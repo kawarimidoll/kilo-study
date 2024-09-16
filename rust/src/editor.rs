@@ -48,7 +48,13 @@ impl Editor {
         let args: Vec<String> = std::env::args().collect();
         // only load the first file for now
         if let Some(first) = args.get(1) {
-            editor.view.load(first);
+            let message = if editor.view.load(first).is_err() {
+                &format!("Could not open file: {first}")
+            } else {
+                "HELP: Ctrl-S = save | Ctrl-Q = quit"
+            };
+
+            editor.message_bar.update_message(message);
         }
         let size = Terminal::size().unwrap_or_default();
         editor.resize(size);
@@ -75,8 +81,6 @@ impl Editor {
         self.status_bar.update_status(&self.view);
         let filename = self.status_bar.document_status.filename_string();
         let title = format!("{filename} - {NAME}");
-        self.message_bar
-            .update_message("HELP: Ctrl-S = save | Ctrl-Q = quit");
         if title != self.title && Terminal::set_title(&title).is_ok() {
             self.title = title;
         }
