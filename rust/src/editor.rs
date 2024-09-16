@@ -10,7 +10,10 @@ use terminal::{Size, Terminal};
 mod editor_command;
 mod file_info;
 mod terminal;
-use editor_command::EditorCommand;
+use editor_command::{
+    Command::{self, Edit, Move, System},
+    System::{Quit, Resize, Save},
+};
 use view::View;
 mod view;
 use ui_component::UIComponent;
@@ -114,13 +117,8 @@ impl Editor {
             _ => false,
         };
         if should_process {
-            match EditorCommand::try_from(event) {
-                Ok(command) => match command {
-                    EditorCommand::Quit => self.should_quit = true,
-                    EditorCommand::Resize(size) => self.resize(size),
-                    EditorCommand::Save => self.handle_save(),
-                    _ => self.view.handle_command(command),
-                },
+            match Command::try_from(event) {
+                Ok(command) => self.process_command(command),
                 Err(err) => {
                     #[cfg(debug_assertions)]
                     panic!("Could not evaluate command: {err}");
@@ -129,6 +127,15 @@ impl Editor {
         } else {
             #[cfg(debug_assertions)]
             panic!("Received and discarded unsupported or non-press event.");
+        }
+    }
+    fn process_command(&mut self, command: Command) {
+        match command {
+            System(Quit) => self.should_quit = true,
+            System(Resize(size)) => self.resize(size),
+            System(Save) => self.handle_save(),
+            Edit(command) => self.view.handle_edit_command(command),
+            Move(command) => self.view.handle_move_command(command),
         }
     }
     fn handle_save(&mut self) {

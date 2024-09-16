@@ -6,7 +6,7 @@ mod buffer;
 mod line;
 mod location;
 use super::{
-    editor_command::{Direction, EditorCommand},
+    editor_command::{Move,Edit},
     terminal::{Position, Size, Terminal},
     ui_component::UIComponent,
     NAME, VERSION,
@@ -25,15 +25,12 @@ pub struct View {
 }
 
 impl View {
-    pub fn handle_command(&mut self, command: EditorCommand) {
-        match command {
-            EditorCommand::Move(direction) => self.move_text_location(direction),
-            EditorCommand::Insert(c) => self.insert(c),
-            EditorCommand::InsertNewLine => self.enter(),
-            EditorCommand::DeleteBackward => self.backspace(),
-            EditorCommand::Delete => self.delete(),
-            // other commands are already handled by the editor
-            _=> {}
+    pub fn handle_edit_command(&mut self, edit_command: Edit) {
+        match edit_command {
+            Edit::Insert(c) => self.insert(c),
+            Edit::InsertNewLine => self.enter(),
+            Edit::DeleteBackward => self.backspace(),
+            Edit::Delete => self.delete(),
         }
     }
     pub fn save(&mut self) -> Result<(), Error> {
@@ -41,13 +38,13 @@ impl View {
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.location) {
-            self.move_text_location(Direction::Right);
+            self.handle_move_command(Move::Right);
             self.needs_redraw = true;
         }
     }
     pub fn enter(&mut self) {
         if self.buffer.insert_newline(self.location) {
-            self.move_text_location(Direction::Right);
+            self.handle_move_command(Move::Right);
             self.needs_redraw = true;
         }
     }
@@ -57,7 +54,7 @@ impl View {
         if x == 0 && y == 0 {
             return;
         }
-        self.move_text_location(Direction::Left);
+        self.handle_move_command(Move::Left);
         self.delete();
     }
     pub fn delete(&mut self) {
@@ -118,18 +115,18 @@ impl View {
         self.buffer.lines.get(row)
     }
 
-    pub fn move_text_location(&mut self, direction: Direction) {
+    pub fn handle_move_command(&mut self, move_command: Move) {
         // This match moves the position, but does not check for all boundaries.
         // The final boundary checking happens after the match statement.
-        match direction {
-            Direction::Left => self.move_left(),
-            Direction::Right => self.move_right(),
-            Direction::Up => self.move_up(1),
-            Direction::Down => self.move_down(1),
-            Direction::StartOfLine => self.move_to_start_of_line(),
-            Direction::EndOfLine => self.move_to_end_of_line(),
-            Direction::PageUp => self.move_up(self.size.height.saturating_sub(1)),
-            Direction::PageDown => self.move_down(self.size.height.saturating_sub(1)),
+        match move_command {
+            Move::Left => self.move_left(),
+            Move::Right => self.move_right(),
+            Move::Up => self.move_up(1),
+            Move::Down => self.move_down(1),
+            Move::StartOfLine => self.move_to_start_of_line(),
+            Move::EndOfLine => self.move_to_end_of_line(),
+            Move::PageUp => self.move_up(self.size.height.saturating_sub(1)),
+            Move::PageDown => self.move_down(self.size.height.saturating_sub(1)),
         };
 
         self.scroll_into_view();

@@ -9,7 +9,7 @@ use crossterm::event::{
 use std::convert::TryFrom;
 
 #[derive(Copy, Clone)]
-pub enum Direction {
+pub enum Move {
     Down,
     EndOfLine,
     StartOfLine,
@@ -19,50 +19,98 @@ pub enum Direction {
     Right,
     Up,
 }
+impl TryFrom<KeyEvent> for Move {
+    type Error = String;
+    fn try_from(event: KeyEvent) -> Result<Self, Self::Error> {
+        let KeyEvent {
+            code, modifiers, ..
+        } = event;
+        match (code, modifiers) {
+            (Down, _) | (Char('n'), KeyModifiers::CONTROL) => Ok(Self::Down),
+            (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::EndOfLine),
+            (Home, _) | (Char('a'), KeyModifiers::CONTROL) => Ok(Self::StartOfLine),
+            (Left, _) | (Char('b'), KeyModifiers::CONTROL) => Ok(Self::Left),
+            (PageDown, _) => Ok(Self::PageDown),
+            (PageUp, _) => Ok(Self::PageUp),
+            (Right, _) | (Char('f'), KeyModifiers::CONTROL) => Ok(Self::Right),
+            (Up, _) | (Char('p'), KeyModifiers::CONTROL) => Ok(Self::Up),
+            _ => Err(format!(
+                "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
+            )),
+        }
+    }
+}
 
 #[derive(Copy, Clone)]
-pub enum EditorCommand {
-    Move(Direction),
-    Resize(Size),
+pub enum Edit {
     Insert(char),
     InsertNewLine,
     DeleteBackward,
     Delete,
+}
+
+impl TryFrom<KeyEvent> for Edit {
+    type Error = String;
+    fn try_from(event: KeyEvent) -> Result<Self, Self::Error> {
+        let KeyEvent {
+            code, modifiers, ..
+        } = event;
+        match (code, modifiers) {
+            (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Insert(c)),
+            (Backspace, KeyModifiers::NONE) => Ok(Self::DeleteBackward),
+            (Delete, KeyModifiers::NONE) => Ok(Self::Delete),
+            (Enter, KeyModifiers::NONE) => Ok(Self::InsertNewLine),
+            (Tab, KeyModifiers::NONE) => Ok(Self::Insert('\t')),
+            _ => Err(format!(
+                "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
+            )),
+        }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum System {
+    Resize(Size),
     Quit,
     Save,
 }
 
-impl TryFrom<Event> for EditorCommand {
+impl TryFrom<KeyEvent> for System {
     type Error = String;
+    fn try_from(event: KeyEvent) -> Result<Self, Self::Error> {
+        let KeyEvent {
+            code, modifiers, ..
+        } = event;
+        match (code, modifiers) {
+            (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
+            (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
+            _ => Err(format!(
+                "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
+            )),
+        }
+    }
+}
+#[derive(Copy, Clone)]
+pub enum Command {
+    Move(Move),
+    Edit(Edit),
+    System(System),
+}
+
+impl TryFrom<Event> for Command {
+    type Error = String;
+    #[allow(clippy::as_conversions)]
     fn try_from(event: Event) -> Result<Self, Self::Error> {
         match event {
-            Key(KeyEvent {
-                code, modifiers, ..
-            }) => match (code, modifiers) {
-                (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
-                (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
-                (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Insert(c)),
-                (Down, _) | (Char('n'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Down)),
-                (End, _) | (Char('e'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::EndOfLine)),
-                (Home, _) | (Char('a'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::StartOfLine)),
-                (Left, _) | (Char('b'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Left)),
-                (PageDown, _) => Ok(Self::Move(Direction::PageDown)),
-                (PageUp, _) => Ok(Self::Move(Direction::PageUp)),
-                (Right, _) | (Char('f'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Right)),
-                (Up, _) | (Char('p'), KeyModifiers::CONTROL) => Ok(Self::Move(Direction::Up)),
-                (Backspace, _) => Ok(Self::DeleteBackward),
-                (Delete, _) => Ok(Self::Delete),
-                (Enter, _) => Ok(Self::InsertNewLine),
-                (Tab, _) => Ok(Self::Insert('\t')),
-                _ => Err(format!(
-                    "Unrecognized key: {code:?}, modifiers: {modifiers:?}"
-                )),
-            },
-            #[allow(clippy::as_conversions)]
-            Event::Resize(width16, height16) => Ok(Self::Resize(Size {
-                width: width16 as usize,
-                height: height16 as usize,
-            })),
+            Key(key_event) => Edit::try_from(key_event)
+                .map(Command::Edit)
+                .or_else(|_| Move::try_from(key_event).map(Command::Move))
+                .or_else(|_| System::try_from(key_event).map(Command::System))
+                .map_err(|_| format!("Unrecognized event: {event:?}")),
+            Event::Resize(width16, height16) => Ok(Self::System(System::Resize(Size {
+            width: width16 as usize,
+            height: height16 as usize,
+        }))),
             _ => Err(format!("Unrecognized event: {event:?}")),
         }
     }
