@@ -108,9 +108,9 @@ impl TryFrom<Event> for Command {
                 .or_else(|_| System::try_from(key_event).map(Command::System))
                 .map_err(|_| format!("Unrecognized event: {event:?}")),
             Event::Resize(width16, height16) => Ok(Self::System(System::Resize(Size {
-            width: width16 as usize,
-            height: height16 as usize,
-        }))),
+                width: width16 as usize,
+                height: height16 as usize,
+            }))),
             _ => Err(format!("Unrecognized event: {event:?}")),
         }
     }
