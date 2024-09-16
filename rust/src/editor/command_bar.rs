@@ -54,7 +54,7 @@ impl UIComponent for CommandBar {
         let value_end = self.value.len();
         let value_start = value_end.saturating_sub(area_width_for_value);
 
-        let line_text = format!("{}{}", self.prompt, self.value[value_start..].to_string());
+        let line_text = format!("{}{}", self.prompt, &self.value[value_start..]);
         let result = Terminal::print_row(origin_y, &line_text);
         debug_assert!(result.is_ok(), "Failed to render command_bar");
         Ok(())

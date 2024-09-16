@@ -152,7 +152,7 @@ impl Editor {
         }
         match command {
             // already handled above
-            System(Quit) | System(Resize(_)) => {}
+            System(Quit | Resize(_)) => {}
             System(Save) => {
                 if self.command_bar.is_none() {
                     self.handle_save();
@@ -176,7 +176,7 @@ impl Editor {
                         command_bar.handle_edit_command(command);
                     }
                 } else {
-                    self.view.handle_edit_command(command)
+                    self.view.handle_edit_command(command);
                 }
             }
             Move(command) => self.view.handle_move_command(command),
@@ -194,7 +194,7 @@ impl Editor {
                 "Unsaved changes. Press Ctrl-Q {} more times to quit.",
                 self.quit_count,
             ));
-            self.quit_count -= 1;
+            self.quit_count = self.quit_count.saturating_sub(1);
         }
     }
     fn reset_quit_count(&mut self) {
