@@ -215,10 +215,10 @@ impl Editor {
         self.command_bar = Some(command_bar);
     }
     fn handle_save(&mut self) {
-        if self.view.buffer.file_info.path.is_none() {
-            self.show_prompt();
-        } else {
+        if self.view.buffer.file_info.has_path() {
             self.save(None);
+        } else {
+            self.show_prompt();
         }
     }
     fn save(&mut self, filename: Option<&str>) {

@@ -97,7 +97,7 @@ impl Buffer {
         self.save_to_file()
     }
     pub fn save_to_file(&mut self) -> Result<(), Error> {
-        if let Some(path) = &self.file_info.path {
+        if let Some(path) = &self.file_info.get_path() {
             let mut file = File::create(path)?;
             for line in &self.lines {
                 writeln!(file, "{line}")?;
