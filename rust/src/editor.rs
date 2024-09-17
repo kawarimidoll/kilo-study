@@ -82,12 +82,12 @@ impl Editor {
             editor.message_bar.update_message(message);
         }
         let size = Terminal::size().unwrap_or_default();
-        editor.resize(size);
+        editor.handle_resize_command(size);
         editor.refresh_status();
         Ok(editor)
     }
 
-    pub fn resize(&mut self, size: Size) {
+    pub fn handle_resize_command(&mut self, size: Size) {
         self.terminal_size = size;
         let view_size = Size {
             width: size.width,
@@ -153,58 +153,67 @@ impl Editor {
         }
     }
     fn process_command(&mut self, command: Command) {
-        match command {
-            System(Quit) => {
-                if self.prompt_type.is_none() {
-                    self.handle_quit();
-                }
-            }
-            System(Resize(size)) => self.resize(size),
-            _ => self.reset_quit_count(),
+        if let System(Resize(size)) = command {
+            self.handle_resize_command(size);
+            return;
         }
+        match self.prompt_type {
+            PromptType::Search => self.process_command_during_search(command),
+            PromptType::Save => self.process_command_during_save(command),
+            PromptType::None => self.process_command_during_no_prompt(command),
+        }
+    }
+    fn process_command_during_no_prompt(&mut self, command: Command) {
+        if matches!(command, System(Quit)) {
+            self.handle_quit();
+            return;
+        }
+        self.reset_quit_count();
+        // handle edit / move commands or start save / search
         match command {
-            // already handled above
-            System(Quit | Resize(_)) => {}
             System(Save) => {
-                if self.prompt_type.is_none() {
-                    if self.view.buffer.file_info.has_path() {
-                        self.save(None);
-                    } else {
-                        self.show_prompt(PromptType::Save);
-                    }
-                }
-            }
-            System(Search) => {
-                if self.prompt_type.is_none() {
-                    self.show_prompt(PromptType::Search);
-                }
-            }
-            System(Dismiss) => {
-                if !self.prompt_type.is_none() {
-                    self.dismiss_prompt();
-                    self.message_bar.update_message("Aborted.");
-                    self.message_bar.set_needs_redraw(true);
-                }
-            }
-            Edit(command) => {
-                if self.prompt_type.is_none() {
-                    self.view.handle_edit_command(command);
+                if self.view.buffer.file_info.has_path() {
+                    self.save(None);
                 } else {
-                    if matches!(command, InsertNewLine) {
-                        let input_value = self.command_bar.value();
-                        // it can't set None here because of multiple mutable borrows
-                        match self.prompt_type {
-                            PromptType::Save => self.save(Some(&input_value)),
-                            PromptType::Search => self.search(Some(&input_value)),
-                            PromptType::None => {}
-                        }
-                        self.dismiss_prompt();
-                    } else {
-                        self.command_bar.handle_edit_command(command);
-                    }
+                    self.show_prompt(PromptType::Save);
                 }
             }
+            System(Search) => self.show_prompt(PromptType::Search),
+            Edit(command) => self.view.handle_edit_command(command),
             Move(command) => self.view.handle_move_command(command),
+            _ => {}
+        }
+    }
+    fn process_command_during_save(&mut self, command: Command) {
+        match command {
+            System(Dismiss) => {
+                self.dismiss_prompt();
+                self.message_bar.update_message("Aborted.");
+                self.message_bar.set_needs_redraw(true);
+            }
+            Edit(InsertNewLine) => {
+                self.save(Some(&self.command_bar.value()));
+                // it can't set None here because of multiple mutable borrows
+                self.show_prompt(PromptType::None);
+            }
+            Edit(command) => self.command_bar.handle_edit_command(command),
+            _ => {}
+        }
+    }
+    fn process_command_during_search(&mut self, command: Command) {
+        match command {
+            System(Dismiss) => {
+                self.dismiss_prompt();
+                self.message_bar.update_message("Aborted.");
+                self.message_bar.set_needs_redraw(true);
+            }
+            Edit(InsertNewLine) => {
+                self.search(Some(&self.command_bar.value()));
+                // it can't set None here because of multiple mutable borrows
+                self.show_prompt(PromptType::None);
+            }
+            Edit(command) => self.command_bar.handle_edit_command(command),
+            _ => {}
         }
     }
     fn dismiss_prompt(&mut self) {
