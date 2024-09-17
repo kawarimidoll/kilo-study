@@ -6,7 +6,7 @@ use crossterm::event::{
     KeyEvent,
     KeyEventKind,
 };
-use terminal::{Position, Size, Terminal};
+use terminal::{Size, Terminal};
 mod editor_command;
 mod file_info;
 mod terminal;
@@ -21,6 +21,8 @@ use ui_component::UIComponent;
 mod ui_component;
 use status_bar::StatusBar;
 mod status_bar;
+use position::{Col, Position, Row};
+mod position;
 use message_bar::MessageBar;
 mod message_bar;
 use command_bar::CommandBar;

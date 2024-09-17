@@ -7,9 +7,9 @@ mod line;
 mod location;
 use super::{
     editor_command::{Edit, Move},
-    terminal::{Position, Size, Terminal},
+    terminal::{Size, Terminal},
     ui_component::UIComponent,
-    NAME, VERSION,
+    Col, Position, Row, NAME, VERSION,
 };
 use location::Location;
 
@@ -122,7 +122,7 @@ impl View {
             row = row.saturating_add(1);
         }
     }
-    fn render_line(row: usize, line_text: &str) {
+    fn render_line(row: Row, line_text: &str) {
         let result = Terminal::print_row(row, line_text);
         debug_assert!(result.is_ok(), "Failed to render line");
     }
@@ -141,7 +141,7 @@ impl View {
         Position { col, row }
     }
 
-    pub fn get_line(&self, row: usize) -> Option<&Line> {
+    pub fn get_line(&self, row: Row) -> Option<&Line> {
         self.buffer.lines.get(row)
     }
 
@@ -161,12 +161,12 @@ impl View {
 
         self.scroll_into_view();
     }
-    fn move_up(&mut self, step: usize) {
+    fn move_up(&mut self, step: Row) {
         self.text_location.line_index = self.text_location.line_index.saturating_sub(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
-    fn move_down(&mut self, step: usize) {
+    fn move_down(&mut self, step: Row) {
         self.text_location.line_index = self.text_location.line_index.saturating_add(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
@@ -208,7 +208,7 @@ impl View {
         self.scroll_horizontally(col);
         self.scroll_vertically(row);
     }
-    fn scroll_horizontally(&mut self, to: usize) {
+    fn scroll_horizontally(&mut self, to: Col) {
         let width = self.size.width;
         if to < self.scroll_offset.col {
             self.scroll_offset.col = to;
@@ -218,7 +218,7 @@ impl View {
             self.needs_redraw = true;
         }
     }
-    fn scroll_vertically(&mut self, to: usize) {
+    fn scroll_vertically(&mut self, to: Row) {
         let height = self.size.height;
         if to < self.scroll_offset.row {
             self.scroll_offset.row = to;

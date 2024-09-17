@@ -6,25 +6,12 @@ use crossterm::terminal::{
 };
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
+use super::Position;
 
 #[derive(Copy, Clone, Default)]
 pub struct Size {
     pub width: usize,
     pub height: usize,
-}
-#[derive(Copy, Clone, Default)]
-pub struct Position {
-    // the position of the screen
-    pub col: usize,
-    pub row: usize,
-}
-impl Position {
-    pub const fn saturating_sub(&self, other: &Self) -> Self {
-        Self {
-            col: self.col.saturating_sub(other.col),
-            row: self.row.saturating_sub(other.row),
-        }
-    }
 }
 
 /// Represents the Terminal.
