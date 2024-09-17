@@ -8,6 +8,8 @@ enum GraphemeWidth {
     Full,
 }
 
+// TODO: control characters are not displayed properly
+
 impl GraphemeWidth {
     fn saturating_add(&self, other: usize) -> usize {
         match self {
@@ -28,19 +30,23 @@ struct TextFragment {
     grapheme: String,
     width: GraphemeWidth,
     replacement: Option<char>,
+    start_byte_index: usize,
 }
 
 impl TextFragment {
-    pub fn new(grapheme: &str) -> Self {
-        let width = match grapheme.width() {
-            0 | 1 => GraphemeWidth::Half,
-            _ => GraphemeWidth::Full,
-        };
+    pub fn new(start_byte_index: usize, grapheme: &str) -> Self {
         let replacement = Self::get_replacement(grapheme);
+        // for now, replacement character is always Half width
+        let width = if grapheme.width() <= 1 || replacement.is_some() {
+            GraphemeWidth::Half
+        } else {
+            GraphemeWidth::Full
+        };
         Self {
             grapheme: String::from(grapheme),
             width,
             replacement,
+            start_byte_index,
         }
     }
     fn get_replacement(grapheme: &str) -> Option<char> {
@@ -67,17 +73,31 @@ impl TextFragment {
 #[derive(Default)]
 pub struct Line {
     fragments: Vec<TextFragment>,
+    string: String,
 }
 
 impl Line {
     pub fn from(string: &str) -> Self {
         Self {
             fragments: Self::string_to_fragments(string),
+            string: String::from(string),
         }
     }
-    fn string_to_fragments(string: &str) -> Vec<TextFragment> {
-        string.graphemes(true).map(TextFragment::new).collect()
+    fn rebuild_fragments(&mut self) {
+        self.fragments = Self::string_to_fragments(&self.string);
     }
+    fn string_to_fragments(string: &str) -> Vec<TextFragment> {
+        string
+            .grapheme_indices(true)
+            .map(|(start_byte_index, grapheme)| TextFragment::new(start_byte_index, grapheme))
+            .collect()
+    }
+    // fn fragments_to_string(fragments: Vec<TextFragment>) -> String {
+    //     fragments
+    //         .iter()
+    //         .map(|fragment| fragment.grapheme.clone())
+    //         .collect()
+    // }
     pub fn get(&self, range: Range<usize>) -> String {
         let mut result = String::new();
         let start = range.start;
@@ -120,33 +140,45 @@ impl Line {
             .map(|fragment| fragment.width.as_usize())
             .sum()
     }
+
     pub fn insert(&mut self, at: usize, string: &str) {
-        self.fragments
-            .splice(at..at, Self::string_to_fragments(string));
+        if let Some(fragment) = self.fragments.get(at) {
+            self.string.insert_str(fragment.start_byte_index, string);
+        } else {
+            self.string.push_str(string);
+        }
+        self.rebuild_fragments();
     }
     pub fn remove(&mut self, start: usize, length: usize) {
-        let end = start.saturating_add(length);
-        self.fragments.splice(start..end, std::iter::empty());
+        if let Some(start_fragment) = self.fragments.get(start) {
+            let end = start.saturating_add(length);
+            let start_byte_index = start_fragment.start_byte_index;
+            if let Some(end_fragment) = self.fragments.get(end) {
+                let end_byte_index = end_fragment.start_byte_index;
+                self.string.drain(start_byte_index..end_byte_index);
+            } else {
+                self.string.drain(start_byte_index..);
+            }
+            self.rebuild_fragments();
+        }
     }
     pub fn append(&mut self, other: &Self) {
-        self.fragments.extend(other.fragments.clone());
+        self.insert(self.len(), &other.string);
     }
+
     pub fn split_off(&mut self, at: usize) -> Self {
-        if at > self.len() {
-            return Self::default();
+        if let Some(fragment) = self.fragments.get(at) {
+            let reminder = self.string.split_off(fragment.start_byte_index);
+            self.rebuild_fragments();
+            Self::from(&reminder)
+        } else {
+            Self::default()
         }
-        let after = self.fragments.split_off(at);
-        Self { fragments: after }
     }
 }
 
 impl std::fmt::Display for Line {
     fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let result: String = self
-            .fragments
-            .iter()
-            .map(|fragment| fragment.grapheme.clone())
-            .collect();
-        write!(formatter, "{result}")
+        write!(formatter, "{}", self.string)
     }
 }
