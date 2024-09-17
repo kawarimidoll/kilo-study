@@ -58,8 +58,10 @@ impl TryFrom<KeyEvent> for Edit {
         } = event;
         match (code, modifiers) {
             (Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => Ok(Self::Insert(c)),
-            (Backspace, KeyModifiers::NONE) => Ok(Self::DeleteBackward),
-            (Delete, KeyModifiers::NONE) => Ok(Self::Delete),
+            (Backspace, KeyModifiers::NONE) | (Char('h'), KeyModifiers::CONTROL) => {
+                Ok(Self::DeleteBackward)
+            }
+            (Delete, KeyModifiers::NONE) | (Char('d'), KeyModifiers::CONTROL) => Ok(Self::Delete),
             (Enter, KeyModifiers::NONE) => Ok(Self::InsertNewLine),
             (Tab, KeyModifiers::NONE) => Ok(Self::Insert('\t')),
             _ => Err(format!(
