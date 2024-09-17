@@ -73,7 +73,8 @@ impl View {
     }
     fn draw_welcome_message(&self) {
         let messages = vec![
-            "Welcome!".to_string(),
+            "A long time ago in a galaxy far, far away...".to_string(),
+            "".to_string(),
             format!("{NAME} editor -- version {VERSION}"),
         ];
         if messages.len() > self.size.height {
