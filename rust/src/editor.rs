@@ -32,17 +32,30 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const QUIT_COUNT: u8 = 2;
 
+#[derive(Default, Eq, PartialEq)]
+enum PromptType {
+    Save,
+    Search,
+    #[default]
+    None,
+}
+impl PromptType {
+    fn is_none(&self) -> bool {
+        *self == Self::None
+    }
+}
+
 #[derive(Default)]
 pub struct Editor {
     should_quit: bool,
     view: View,
     status_bar: StatusBar,
     message_bar: MessageBar,
-    command_bar: Option<CommandBar>,
+    command_bar: CommandBar,
     terminal_size: Size,
     title: String,
     quit_count: u8,
-    to_search: bool,
+    prompt_type: PromptType,
 }
 
 impl Editor {
@@ -87,8 +100,8 @@ impl Editor {
         self.view.resize(view_size);
         self.status_bar.resize(bar_size);
         self.message_bar.resize(bar_size);
-        if let Some(command_bar) = &mut self.command_bar {
-            command_bar.resize(bar_size);
+        if !self.prompt_type.is_none() {
+            self.command_bar.resize(bar_size);
         }
     }
 
@@ -144,7 +157,7 @@ impl Editor {
     fn process_command(&mut self, command: Command) {
         match command {
             System(Quit) => {
-                if self.command_bar.is_none() {
+                if self.prompt_type.is_none() {
                     self.handle_quit();
                 }
             }
@@ -155,45 +168,45 @@ impl Editor {
             // already handled above
             System(Quit | Resize(_)) => {}
             System(Save) => {
-                if self.command_bar.is_none() {
+                if self.prompt_type.is_none() {
                     self.handle_save();
                 }
             }
             System(Search) => {
-                if self.command_bar.is_none() {
+                if self.prompt_type.is_none() {
                     self.handle_search();
                 }
             }
             System(Dismiss) => {
-                if self.command_bar.is_some() {
+                if !self.prompt_type.is_none() {
                     self.dismiss_prompt();
                     self.message_bar.update_message("Save aborted.");
                     self.message_bar.set_needs_redraw(true);
                 }
             }
             Edit(command) => {
-                if let Some(command_bar) = &mut self.command_bar {
-                    if matches!(command, InsertNewLine) {
-                        let input_value = command_bar.value();
-                        // it can't set None here because of multiple mutable borrows
-                        self.dismiss_prompt();
-                        if self.to_search {
-                            self.search(Some(&input_value));
-                        } else {
-                            self.save(Some(&input_value));
-                        }
-                    } else {
-                        command_bar.handle_edit_command(command);
-                    }
-                } else {
+                if self.prompt_type.is_none() {
                     self.view.handle_edit_command(command);
+                } else {
+                    if matches!(command, InsertNewLine) {
+                        let input_value = self.command_bar.value();
+                        // it can't set None here because of multiple mutable borrows
+                        match self.prompt_type {
+                            PromptType::Save => self.save(Some(&input_value)),
+                            PromptType::Search => self.search(Some(&input_value)),
+                            PromptType::None => {}
+                        }
+                        self.dismiss_prompt();
+                    } else {
+                        self.command_bar.handle_edit_command(command);
+                    }
                 }
             }
             Move(command) => self.view.handle_move_command(command),
         }
     }
     fn dismiss_prompt(&mut self) {
-        self.command_bar = None;
+        self.prompt_type = PromptType::None;
         self.message_bar.set_needs_redraw(true);
     }
     fn handle_quit(&mut self) {
@@ -222,10 +235,10 @@ impl Editor {
         };
         command_bar.set_size(bar_size);
         command_bar.set_needs_redraw(true);
-        self.command_bar = Some(command_bar);
+        self.command_bar = command_bar;
     }
     fn handle_search(&mut self) {
-        self.to_search = true;
+        self.prompt_type = PromptType::Search;
         self.show_prompt("Search: ");
     }
     fn search(&mut self, query: Option<&str>) {
@@ -239,7 +252,7 @@ impl Editor {
         if self.view.buffer.file_info.has_path() {
             self.save(None);
         } else {
-            self.to_search = false;
+            self.prompt_type = PromptType::Save;
             self.show_prompt("Save as: ");
         }
     }
@@ -263,10 +276,10 @@ impl Editor {
         }
         let _ = Terminal::hide_caret();
         let bottom_row = self.terminal_size.height.saturating_sub(1);
-        if let Some(command_bar) = &mut self.command_bar {
-            command_bar.render(bottom_row);
-        } else {
+        if self.prompt_type.is_none() {
             self.message_bar.render(bottom_row);
+        } else {
+            self.command_bar.render(bottom_row)
         }
         if self.terminal_size.height > 1 {
             let terminal_origin = self.terminal_size.height.saturating_sub(2);
@@ -276,13 +289,13 @@ impl Editor {
             }
         }
 
-        let caret_position = if let Some(command_bar) = &self.command_bar {
+        let caret_position = if self.prompt_type.is_none() {
+            self.view.caret_position()
+        } else {
             Position {
-                col: command_bar.caret_col(),
+                col: self.command_bar.caret_col(),
                 row: bottom_row,
             }
-        } else {
-            self.view.caret_position()
         };
         let _ = Terminal::move_caret_to(caret_position);
         let _ = Terminal::show_caret();
