@@ -1,4 +1,5 @@
-use std::ops::Range;
+use std::fmt::{Display, Formatter, Result};
+use std::ops::{Deref, Range};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::UnicodeWidthStr;
 
@@ -7,6 +8,9 @@ enum GraphemeWidth {
     Half,
     Full,
 }
+
+type GraphemeIdx = usize;
+type ByteIdx = usize;
 
 // TODO: control characters are not displayed properly
 
@@ -30,11 +34,11 @@ struct TextFragment {
     grapheme: String,
     width: GraphemeWidth,
     replacement: Option<char>,
-    start_byte_index: usize,
+    start_byte_idx: usize,
 }
 
 impl TextFragment {
-    pub fn new(start_byte_index: usize, grapheme: &str) -> Self {
+    pub fn new(start_byte_idx: usize, grapheme: &str) -> Self {
         let replacement = Self::get_replacement(grapheme);
         // for now, replacement character is always Half width
         let width = if grapheme.width() <= 1 || replacement.is_some() {
@@ -46,7 +50,7 @@ impl TextFragment {
             grapheme: String::from(grapheme),
             width,
             replacement,
-            start_byte_index,
+            start_byte_idx,
         }
     }
     fn get_replacement(grapheme: &str) -> Option<char> {
@@ -89,7 +93,7 @@ impl Line {
     fn string_to_fragments(string: &str) -> Vec<TextFragment> {
         string
             .grapheme_indices(true)
-            .map(|(start_byte_index, grapheme)| TextFragment::new(start_byte_index, grapheme))
+            .map(|(start_byte_idx, grapheme)| TextFragment::new(start_byte_idx, grapheme))
             .collect()
     }
     // fn fragments_to_string(fragments: Vec<TextFragment>) -> String {
@@ -98,7 +102,7 @@ impl Line {
     //         .map(|fragment| fragment.grapheme.clone())
     //         .collect()
     // }
-    pub fn get(&self, range: Range<usize>) -> String {
+    pub fn get_visible_graphemes(&self, range: Range<GraphemeIdx>) -> String {
         let mut result = String::new();
         let start = range.start;
         let end = range.end;
@@ -130,34 +134,34 @@ impl Line {
 
         result
     }
-    pub fn len(&self) -> usize {
+    pub fn grapheme_count(&self) -> GraphemeIdx {
         self.fragments.len()
     }
-    pub fn width_until(&self, end: usize) -> usize {
+    pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> GraphemeIdx {
         self.fragments
             .iter()
-            .take(end)
+            .take(grapheme_idx)
             .map(|fragment| fragment.width.as_usize())
             .sum()
     }
 
-    pub fn insert(&mut self, at: usize, string: &str) {
+    pub fn insert(&mut self, at: GraphemeIdx, string: &str) {
         if let Some(fragment) = self.fragments.get(at) {
-            self.string.insert_str(fragment.start_byte_index, string);
+            self.string.insert_str(fragment.start_byte_idx, string);
         } else {
             self.string.push_str(string);
         }
         self.rebuild_fragments();
     }
-    pub fn remove(&mut self, start: usize, length: usize) {
+    pub fn remove(&mut self, start: GraphemeIdx, length: GraphemeIdx) {
         if let Some(start_fragment) = self.fragments.get(start) {
             let end = start.saturating_add(length);
-            let start_byte_index = start_fragment.start_byte_index;
+            let start_byte_idx = start_fragment.start_byte_idx;
             if let Some(end_fragment) = self.fragments.get(end) {
-                let end_byte_index = end_fragment.start_byte_index;
-                self.string.drain(start_byte_index..end_byte_index);
+                let end_byte_idx = end_fragment.start_byte_idx;
+                self.string.drain(start_byte_idx..end_byte_idx);
             } else {
-                self.string.drain(start_byte_index..);
+                self.string.drain(start_byte_idx..);
             }
             self.rebuild_fragments();
         }
@@ -166,34 +170,28 @@ impl Line {
         self.insert(self.len(), &other.string);
     }
 
-    pub fn split_off(&mut self, at: usize) -> Self {
+    pub fn split_off(&mut self, at: GraphemeIdx) -> Self {
         if let Some(fragment) = self.fragments.get(at) {
-            let reminder = self.string.split_off(fragment.start_byte_index);
+            let reminder = self.string.split_off(fragment.start_byte_idx);
             self.rebuild_fragments();
             Self::from(&reminder)
         } else {
             Self::default()
         }
     }
-    fn byte_idx_to_grapheme_idx(&self, byte_idx: usize) -> usize {
-        for (grapheme_idx, fragment) in self.fragments.iter().enumerate() {
-            if fragment.start_byte_index >= byte_idx {
-                return grapheme_idx;
-            }
-        }
-
-        #[cfg(debug_assertions)]
-        panic!("byte_idx_to_grapheme_idx: Invalid byte_index: {byte_idx:?}");
-
-        #[cfg(not(debug_assertions))]
-        0
+    fn byte_idx_to_grapheme_idx(&self, byte_idx: ByteIdx) -> GraphemeIdx {
+        self.fragments
+            .iter()
+            .position(|fragment| fragment.start_byte_idx >= byte_idx)
+            .map_or(0, |grapheme_idx| grapheme_idx)
     }
-    pub fn search(&self, query: &str) -> Option<usize> {
+    pub fn search(&self, query: &str) -> Option<GraphemeIdx> {
         self.string
             .find(query)
             .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx))
     }
-    pub fn search_ignore_case(&self, query: &str) -> Option<usize> {
+    #[allow(dead_code)]
+    pub fn search_ignore_case(&self, query: &str) -> Option<GraphemeIdx> {
         self.string
             .to_lowercase()
             .find(&query.to_lowercase())
@@ -201,8 +199,14 @@ impl Line {
     }
 }
 
-impl std::fmt::Display for Line {
-    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Line {
+    fn fmt(&self, formatter: &mut Formatter) -> Result {
         write!(formatter, "{}", self.string)
+    }
+}
+impl Deref for Line {
+    type Target = str;
+    fn deref(&self) -> &Self::Target {
+        &self.string
     }
 }

@@ -19,30 +19,36 @@ impl Buffer {
         self.lines.is_empty()
     }
     pub fn insert_newline(&mut self, at: Location) -> bool {
-        let Location { grapheme_index, line_index } = at;
-        if line_index >= self.height() {
+        let Location {
+            grapheme_idx,
+            line_idx,
+        } = at;
+        if line_idx >= self.height() {
             self.lines.push(Line::default());
         } else {
-            // we have a valid line_index
-            let second_half = self.lines[line_index].split_off(grapheme_index);
-            self.lines.insert(line_index.saturating_add(1), second_half);
+            // we have a valid line_idx
+            let second_half = self.lines[line_idx].split_off(grapheme_idx);
+            self.lines.insert(line_idx.saturating_add(1), second_half);
         }
         self.dirty = self.dirty.saturating_add(1);
         true
     }
     pub fn remove_char(&mut self, at: Location) -> bool {
-        let Location { grapheme_index, line_index } = at;
+        let Location {
+            grapheme_idx,
+            line_idx,
+        } = at;
         // out of bounds
-        if line_index >= self.height() {
+        if line_idx >= self.height() {
             return false;
         }
 
-        // below here, we have a valid line_index
-        if grapheme_index < self.lines[line_index].len() {
-            self.lines[line_index].remove(grapheme_index, 1);
-        } else if line_index < self.height().saturating_sub(1) {
-            let next_line = self.lines.remove(line_index.saturating_add(1));
-            self.lines[line_index].append(&next_line);
+        // below here, we have a valid line_idx
+        if grapheme_idx < self.lines[line_idx].len() {
+            self.lines[line_idx].remove(grapheme_idx, 1);
+        } else if line_idx < self.height().saturating_sub(1) {
+            let next_line = self.lines.remove(line_idx.saturating_add(1));
+            self.lines[line_idx].append(&next_line);
         } else {
             // the last line, the last character
             return false;
@@ -51,24 +57,27 @@ impl Buffer {
         true
     }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
-        let Location { grapheme_index, line_index } = at;
+        let Location {
+            grapheme_idx,
+            line_idx,
+        } = at;
         // out of bounds
-        if line_index > self.height() {
+        if line_idx > self.height() {
             return false;
         }
 
         let string = c.to_string();
 
         // append a new line
-        if line_index == self.height() {
+        if line_idx == self.height() {
             self.lines.push(Line::from(&string));
             self.dirty = self.dirty.saturating_add(1);
             return true;
         }
 
         // insert a new character in an existing line
-        if let Some(line) = self.lines.get_mut(line_index) {
-            line.insert(grapheme_index, &string);
+        if let Some(line) = self.lines.get_mut(line_idx) {
+            line.insert(grapheme_idx, &string);
             self.dirty = self.dirty.saturating_add(1);
             return true;
         }
@@ -89,11 +98,11 @@ impl Buffer {
         })
     }
     pub fn search(&mut self, query: &str) -> Option<Location> {
-        for (line_index, line) in self.lines.iter().enumerate() {
-            if let Some(grapheme_index) = line.search(query) {
+        for (line_idx, line) in self.lines.iter().enumerate() {
+            if let Some(grapheme_idx) = line.search(query) {
                 return Some(Location {
-                    grapheme_index,
-                    line_index,
+                    grapheme_idx,
+                    line_idx,
                 });
             }
         }

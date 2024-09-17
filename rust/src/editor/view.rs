@@ -57,9 +57,12 @@ impl View {
         }
     }
     pub fn backspace(&mut self) {
-        let Location { grapheme_index, line_index } = self.text_location;
+        let Location {
+            grapheme_idx,
+            line_idx,
+        } = self.text_location;
         // out of bounds
-        if grapheme_index == 0 && line_index == 0 {
+        if grapheme_idx == 0 && line_idx == 0 {
             return;
         }
         self.handle_move_command(Move::Left);
@@ -132,12 +135,10 @@ impl View {
             .saturating_sub(&self.scroll_offset)
     }
     pub fn text_location_to_position(&self) -> Position {
-        let row = self.text_location.line_index;
-        let col = self
-            .buffer
-            .lines
-            .get(row)
-            .map_or(0, |line| line.width_until(self.text_location.grapheme_index));
+        let row = self.text_location.line_idx;
+        let col = self.buffer.lines.get(row).map_or(0, |line| {
+            line.width_until(self.text_location.grapheme_idx)
+        });
         Position { col, row }
     }
 
@@ -162,46 +163,51 @@ impl View {
         self.scroll_into_view();
     }
     fn move_up(&mut self, step: Row) {
-        self.text_location.line_index = self.text_location.line_index.saturating_sub(step);
+        self.text_location.line_idx = self.text_location.line_idx.saturating_sub(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
     fn move_down(&mut self, step: Row) {
-        self.text_location.line_index = self.text_location.line_index.saturating_add(step);
+        self.text_location.line_idx = self.text_location.line_idx.saturating_add(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
     fn move_left(&mut self) {
-        if self.text_location.grapheme_index > 0 {
-            self.text_location.grapheme_index = self.text_location.grapheme_index.saturating_sub(1);
+        if self.text_location.grapheme_idx > 0 {
+            self.text_location.grapheme_idx = self.text_location.grapheme_idx.saturating_sub(1);
         } else {
             self.move_up(1);
             self.move_to_end_of_line();
         }
     }
     fn move_right(&mut self) {
-        let line_len = self.get_line(self.text_location.line_index).map_or(0, Line::len);
-        if self.text_location.grapheme_index == line_len {
+        let line_len = self
+            .get_line(self.text_location.line_idx)
+            .map_or(0, Line::grapheme_count);
+        if self.text_location.grapheme_idx == line_len {
             self.move_to_start_of_line();
             self.move_down(1);
         } else {
-            self.text_location.grapheme_index = self.text_location.grapheme_index.saturating_add(1);
+            self.text_location.grapheme_idx = self.text_location.grapheme_idx.saturating_add(1);
         }
     }
     fn move_to_start_of_line(&mut self) {
-        self.text_location.grapheme_index = 0;
+        self.text_location.grapheme_idx = 0;
     }
     fn move_to_end_of_line(&mut self) {
-        self.text_location.grapheme_index = self.get_line(self.text_location.line_index).map_or(0, Line::len);
+        self.text_location.grapheme_idx = self
+            .get_line(self.text_location.line_idx)
+            .map_or(0, Line::grapheme_count);
     }
     fn snap_to_valid_x(&mut self) {
-        self.text_location.grapheme_index = min(
-            self.text_location.grapheme_index,
-            self.get_line(self.text_location.line_index).map_or(0, Line::len),
+        self.text_location.grapheme_idx = min(
+            self.text_location.grapheme_idx,
+            self.get_line(self.text_location.line_idx)
+                .map_or(0, Line::grapheme_count),
         );
     }
     fn snap_to_valid_y(&mut self) {
-        self.text_location.line_index = min(self.text_location.line_index, self.buffer.height());
+        self.text_location.line_idx = min(self.text_location.line_idx, self.buffer.height());
     }
     fn scroll_into_view(&mut self) {
         let Position { col, row } = self.text_location_to_position();
@@ -249,9 +255,10 @@ impl UIComponent for View {
         let right = left.saturating_add(width);
         let end_y = origin_y.saturating_add(height);
         for current_row in origin_y..end_y {
-            let line_text = self
-                .get_line(current_row.saturating_add(top))
-                .map_or_else(|| FILLCHAR_EOB.to_string(), |line| line.get(left..right));
+            let line_text = self.get_line(current_row.saturating_add(top)).map_or_else(
+                || FILLCHAR_EOB.to_string(),
+                |line| line.get_visible_graphemes(left..right),
+            );
             Self::render_line(current_row, &line_text);
         }
         if self.buffer.is_empty() {

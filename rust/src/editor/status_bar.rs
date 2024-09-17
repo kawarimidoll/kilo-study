@@ -9,7 +9,7 @@ use std::io::Error;
 pub struct DocumentStatus {
     filename: Option<String>,
     total_lines: usize,
-    current_line: usize,
+    current_line_idx: usize,
     modified: bool,
 }
 impl DocumentStatus {
@@ -29,7 +29,7 @@ impl DocumentStatus {
         format!("{} lines", self.total_lines)
     }
     pub fn position_string(&self) -> String {
-        format!("{}/{}", self.current_line, self.total_lines)
+        format!("{}/{}", self.current_line_idx, self.total_lines)
     }
 }
 
@@ -45,7 +45,7 @@ impl StatusBar {
         let new_status = DocumentStatus {
             filename: format!("{}", view.buffer.file_info).into(),
             total_lines: view.buffer.height(),
-            current_line: view.text_location.line_index.saturating_add(1),
+            current_line_idx: view.text_location.line_idx.saturating_add(1),
             modified: view.buffer.dirty > 0,
         };
         if self.document_status != new_status {
