@@ -175,6 +175,27 @@ impl Line {
             Self::default()
         }
     }
+    fn byte_idx_to_grapheme_idx(&self, byte_idx: usize) -> usize {
+        for (grapheme_idx, fragment) in self.fragments.iter().enumerate() {
+            if fragment.start_byte_index >= byte_idx {
+                return grapheme_idx;
+            }
+        }
+
+        #[cfg(debug_assertions)]
+        panic!("byte_idx_to_grapheme_idx: Invalid byte_index: {byte_idx:?}");
+
+        #[cfg(not(debug_assertions))]
+        0
+    }
+    pub fn search(&self, query:&str) -> Option<usize> {
+        self.string.find(query)
+            .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx))
+    }
+    pub fn search_ignore_case(&self, query:&str) -> Option<usize> {
+        self.string.to_lowercase().find(&query.to_lowercase())
+            .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx))
+    }
 }
 
 impl std::fmt::Display for Line {

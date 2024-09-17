@@ -65,6 +65,18 @@ impl View {
             self.needs_redraw = true;
         }
     }
+    pub fn enter_search(&mut self)  {
+        // todo: store start position
+    }
+    pub fn dismiss_search(&mut self)  {
+        // todo: restore start position
+    }
+    pub fn exit_search(&mut self)  {
+        // todo: exit search mode
+    }
+    pub fn search(&mut self, query: &str)  {
+        // todo: search for query
+    }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;
         self.buffer = buffer;

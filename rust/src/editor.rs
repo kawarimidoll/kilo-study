@@ -203,15 +203,19 @@ impl Editor {
         match command {
             System(Dismiss) => {
                 self.show_prompt(PromptType::None);
+                self.view.dismiss_search();
                 self.message_bar.update_message("Aborted.");
                 self.message_bar.set_needs_redraw(true);
             }
             Edit(InsertNewLine) => {
-                self.search(Some(&self.command_bar.value()));
                 // it can't set None here because of multiple mutable borrows
                 self.show_prompt(PromptType::None);
+                self.view.exit_search();
             }
-            Edit(command) => self.command_bar.handle_edit_command(command),
+            Edit(command) => {
+                self.command_bar.handle_edit_command(command);
+                self.view.search(&self.command_bar.value());
+            }
             _ => {}
         }
     }
@@ -235,19 +239,15 @@ impl Editor {
     fn show_prompt(&mut self, prompt_type: PromptType) {
         match prompt_type {
             PromptType::Save => self.command_bar.set_prompt("Save as: "),
-            PromptType::Search => self.command_bar.set_prompt("Search: "),
+            PromptType::Search => {
+                self.view.enter_search();
+                self.command_bar.set_prompt("Search: ");
+            }
             PromptType::None => self.message_bar.set_needs_redraw(true),
         }
 
         self.command_bar.clear_value();
         self.prompt_type = prompt_type;
-    }
-    fn search(&mut self, query: Option<&str>) {
-        if let Some(q) = query {
-            // self.view.search(q);
-            self.message_bar
-                .update_message(&format!("Search start: {q}"));
-        }
     }
     fn save(&mut self, filename: Option<&str>) {
         let save_result = if let Some(name) = filename {
