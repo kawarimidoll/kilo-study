@@ -76,6 +76,7 @@ pub enum System {
     Resize(Size),
     Quit,
     Save,
+    Search,
     Dismiss,
 }
 
@@ -88,6 +89,7 @@ impl TryFrom<KeyEvent> for System {
         match (code, modifiers) {
             (Char('q'), KeyModifiers::CONTROL) => Ok(Self::Quit),
             (Char('s'), KeyModifiers::CONTROL) => Ok(Self::Save),
+            (Char('g'), KeyModifiers::CONTROL) => Ok(Self::Search),
             (Esc, KeyModifiers::NONE) => Ok(Self::Dismiss),
             _ => Err(format!(
                 "Unrecognized key: {code:?}, modifiers: {modifiers:?}"

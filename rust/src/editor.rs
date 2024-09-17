@@ -13,7 +13,7 @@ mod terminal;
 use editor_command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewLine,
-    System::{Dismiss, Quit, Resize, Save},
+    System::{Dismiss, Quit, Resize, Save, Search},
 };
 use view::View;
 mod view;
@@ -42,6 +42,7 @@ pub struct Editor {
     terminal_size: Size,
     title: String,
     quit_count: u8,
+    to_search: bool,
 }
 
 impl Editor {
@@ -62,7 +63,7 @@ impl Editor {
             let message = if editor.view.load(first).is_err() {
                 &format!("Could not open file: {first}")
             } else {
-                "HELP: Ctrl-S = save | Ctrl-Q = quit"
+                "HELP: Ctrl-F = find | Ctrl-S = save | Ctrl-Q = quit"
             };
 
             editor.message_bar.update_message(message);
@@ -158,6 +159,11 @@ impl Editor {
                     self.handle_save();
                 }
             }
+            System(Search) => {
+                if self.command_bar.is_none() {
+                    self.handle_search();
+                }
+            }
             System(Dismiss) => {
                 if self.command_bar.is_some() {
                     self.dismiss_prompt();
@@ -168,10 +174,14 @@ impl Editor {
             Edit(command) => {
                 if let Some(command_bar) = &mut self.command_bar {
                     if matches!(command, InsertNewLine) {
-                        let filename = command_bar.value();
+                        let input_value = command_bar.value();
                         // it can't set None here because of multiple mutable borrows
                         self.dismiss_prompt();
-                        self.save(Some(&filename));
+                        if self.to_search {
+                            self.search(Some(&input_value));
+                        } else {
+                            self.save(Some(&input_value));
+                        }
                     } else {
                         command_bar.handle_edit_command(command);
                     }
@@ -203,9 +213,9 @@ impl Editor {
             self.message_bar.update_message("");
         }
     }
-    fn show_prompt(&mut self) {
+    fn show_prompt(&mut self, prompt: &str) {
         let mut command_bar = CommandBar::default();
-        command_bar.set_prompt("Save as: ");
+        command_bar.set_prompt(prompt);
         let bar_size = Size {
             width: self.terminal_size.width,
             height: 1,
@@ -214,11 +224,23 @@ impl Editor {
         command_bar.set_needs_redraw(true);
         self.command_bar = Some(command_bar);
     }
+    fn handle_search(&mut self) {
+        self.to_search = true;
+        self.show_prompt("Search: ");
+    }
+    fn search(&mut self, query: Option<&str>) {
+        if let Some(q) = query {
+            // self.view.search(q);
+            self.message_bar
+                .update_message(&format!("Search start: {q}"));
+        }
+    }
     fn handle_save(&mut self) {
         if self.view.buffer.file_info.has_path() {
             self.save(None);
         } else {
-            self.show_prompt();
+            self.to_search = false;
+            self.show_prompt("Save as: ");
         }
     }
     fn save(&mut self, filename: Option<&str>) {
