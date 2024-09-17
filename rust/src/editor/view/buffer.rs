@@ -103,7 +103,9 @@ impl Buffer {
                 writeln!(file, "{line}")?;
             }
             self.dirty = 0;
+            Ok(())
+        } else {
+            Err(Error::new(std::io::ErrorKind::Other, "No file path"))
         }
-        Ok(())
     }
 }

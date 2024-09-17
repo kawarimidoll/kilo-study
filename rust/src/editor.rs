@@ -181,7 +181,7 @@ impl Editor {
             System(Search) => self.show_prompt(PromptType::Search),
             Edit(command) => self.view.handle_edit_command(command),
             Move(command) => self.view.handle_move_command(command),
-            _ => {}
+            System(_) => {}
         }
     }
     fn process_command_during_save(&mut self, command: Command) {
@@ -277,7 +277,7 @@ impl Editor {
         if self.prompt_type.is_none() {
             self.message_bar.render(bottom_row);
         } else {
-            self.command_bar.render(bottom_row)
+            self.command_bar.render(bottom_row);
         }
         if self.terminal_size.height > 1 {
             let terminal_origin = self.terminal_size.height.saturating_sub(2);

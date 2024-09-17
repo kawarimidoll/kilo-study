@@ -35,10 +35,11 @@ impl CommandBar {
         self.value.to_string()
     }
     pub fn clear_value(&mut self) {
-        self.value = "".to_string();
+        self.value = String::default();
     }
     pub fn set_prompt(&mut self, prompt: &str) {
         self.prompt = prompt.to_string();
+        self.set_needs_redraw(true);
     }
 }
 

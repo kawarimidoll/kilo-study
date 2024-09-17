@@ -6,7 +6,7 @@ mod buffer;
 mod line;
 mod location;
 use super::{
-    editor_command::{Move,Edit},
+    editor_command::{Edit, Move},
     terminal::{Position, Size, Terminal},
     ui_component::UIComponent,
     NAME, VERSION,
@@ -74,7 +74,7 @@ impl View {
     fn draw_welcome_message(&self) {
         let messages = vec![
             "A long time ago in a galaxy far, far away...".to_string(),
-            "".to_string(),
+            String::default(),
             format!("{NAME} editor -- version {VERSION}"),
         ];
         if messages.len() > self.size.height {
