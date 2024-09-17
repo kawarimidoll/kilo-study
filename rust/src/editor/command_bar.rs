@@ -34,6 +34,9 @@ impl CommandBar {
     pub fn value(&self) -> String {
         self.value.to_string()
     }
+    pub fn clear_value(&mut self) {
+        self.value = "".to_string();
+    }
     pub fn set_prompt(&mut self, prompt: &str) {
         self.prompt = prompt.to_string();
     }

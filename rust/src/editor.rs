@@ -100,9 +100,7 @@ impl Editor {
         self.view.resize(view_size);
         self.status_bar.resize(bar_size);
         self.message_bar.resize(bar_size);
-        if !self.prompt_type.is_none() {
-            self.command_bar.resize(bar_size);
-        }
+        self.command_bar.resize(bar_size);
     }
 
     pub fn refresh_status(&mut self) {
@@ -169,18 +167,22 @@ impl Editor {
             System(Quit | Resize(_)) => {}
             System(Save) => {
                 if self.prompt_type.is_none() {
-                    self.handle_save();
+                    if self.view.buffer.file_info.has_path() {
+                        self.save(None);
+                    } else {
+                        self.show_prompt(PromptType::Save);
+                    }
                 }
             }
             System(Search) => {
                 if self.prompt_type.is_none() {
-                    self.handle_search();
+                    self.show_prompt(PromptType::Search);
                 }
             }
             System(Dismiss) => {
                 if !self.prompt_type.is_none() {
                     self.dismiss_prompt();
-                    self.message_bar.update_message("Save aborted.");
+                    self.message_bar.update_message("Aborted.");
                     self.message_bar.set_needs_redraw(true);
                 }
             }
@@ -226,34 +228,21 @@ impl Editor {
             self.message_bar.update_message("");
         }
     }
-    fn show_prompt(&mut self, prompt: &str) {
-        let mut command_bar = CommandBar::default();
-        command_bar.set_prompt(prompt);
-        let bar_size = Size {
-            width: self.terminal_size.width,
-            height: 1,
-        };
-        command_bar.set_size(bar_size);
-        command_bar.set_needs_redraw(true);
-        self.command_bar = command_bar;
-    }
-    fn handle_search(&mut self) {
-        self.prompt_type = PromptType::Search;
-        self.show_prompt("Search: ");
+    fn show_prompt(&mut self, prompt_type: PromptType) {
+        match prompt_type {
+            PromptType::Save => self.command_bar.set_prompt("Save as: "),
+            PromptType::Search => self.command_bar.set_prompt("Search: "),
+            PromptType::None => self.message_bar.set_needs_redraw(true),
+        }
+
+        self.command_bar.clear_value();
+        self.prompt_type = prompt_type;
     }
     fn search(&mut self, query: Option<&str>) {
         if let Some(q) = query {
             // self.view.search(q);
             self.message_bar
                 .update_message(&format!("Search start: {q}"));
-        }
-    }
-    fn handle_save(&mut self) {
-        if self.view.buffer.file_info.has_path() {
-            self.save(None);
-        } else {
-            self.prompt_type = PromptType::Save;
-            self.show_prompt("Save as: ");
         }
     }
     fn save(&mut self, filename: Option<&str>) {
