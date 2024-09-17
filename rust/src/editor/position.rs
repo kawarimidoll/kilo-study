@@ -1,4 +1,4 @@
-pub type Col= usize;
+pub type Col = usize;
 pub type Row = usize;
 
 #[derive(Copy, Clone, Default)]
@@ -15,4 +15,3 @@ impl Position {
         }
     }
 }
-

@@ -1,3 +1,4 @@
+use super::Position;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{Attribute, Print};
 use crossterm::terminal::{
@@ -6,7 +7,6 @@ use crossterm::terminal::{
 };
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
-use super::Position;
 
 #[derive(Copy, Clone, Default)]
 pub struct Size {
