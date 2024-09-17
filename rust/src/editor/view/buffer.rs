@@ -88,6 +88,17 @@ impl Buffer {
             dirty: 0,
         })
     }
+    pub fn search(&mut self, query: &str) -> Option<Location> {
+        for (line_index, line) in self.lines.iter().enumerate() {
+            if let Some(grapheme_index) = line.search(query) {
+                return Some(Location {
+                    grapheme_index,
+                    line_index,
+                });
+            }
+        }
+        None
+    }
     pub fn save(&mut self) -> Result<(), Error> {
         self.save_to_file()
     }

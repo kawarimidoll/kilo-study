@@ -15,6 +15,10 @@ use location::Location;
 
 const FILLCHAR_EOB: &str = "~";
 
+struct SearchInfo {
+    prev_location: Location,
+}
+
 #[derive(Default)]
 pub struct View {
     pub buffer: Buffer,
@@ -22,6 +26,7 @@ pub struct View {
     size: Size,
     pub text_location: Location,
     scroll_offset: Position,
+    search_info: Option<SearchInfo>,
 }
 
 impl View {
@@ -66,16 +71,25 @@ impl View {
         }
     }
     pub fn enter_search(&mut self) {
-        // todo: store start position
+        self.search_info = Some(SearchInfo {
+            prev_location: self.text_location,
+        });
     }
     pub fn dismiss_search(&mut self) {
-        // todo: restore start position
+        if let Some(search_info) = &self.search_info {
+            self.text_location = search_info.prev_location;
+        }
+        self.exit_search();
+        self.scroll_into_view();
     }
     pub fn exit_search(&mut self) {
-        // todo: exit search mode
+        self.search_info = None;
     }
     pub fn search(&mut self, query: &str) {
-        // todo: search for query
+        if let Some(location) = self.buffer.search(query) {
+            self.text_location = location;
+            self.scroll_into_view();
+        }
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;
