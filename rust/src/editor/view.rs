@@ -18,10 +18,10 @@ const FILLCHAR_EOB: &str = "~";
 #[derive(Default)]
 pub struct View {
     pub buffer: Buffer,
-    pub needs_redraw: bool,
-    pub size: Size,
-    pub location: Location,
-    pub scroll_offset: Position,
+    needs_redraw: bool,
+    size: Size,
+    pub text_location: Location,
+    scroll_offset: Position,
 }
 
 impl View {
@@ -40,41 +40,41 @@ impl View {
         self.buffer.save_as(filename)
     }
     pub fn insert(&mut self, c: char) {
-        if self.buffer.insert_char(c, self.location) {
+        if self.buffer.insert_char(c, self.text_location) {
             self.handle_move_command(Move::Right);
             self.needs_redraw = true;
         }
     }
     pub fn enter(&mut self) {
-        if self.buffer.insert_newline(self.location) {
+        if self.buffer.insert_newline(self.text_location) {
             self.handle_move_command(Move::Right);
             self.needs_redraw = true;
         }
     }
     pub fn backspace(&mut self) {
-        let Location { x, y } = self.location;
+        let Location { grapheme_index, line_index } = self.text_location;
         // out of bounds
-        if x == 0 && y == 0 {
+        if grapheme_index == 0 && line_index == 0 {
             return;
         }
         self.handle_move_command(Move::Left);
         self.delete();
     }
     pub fn delete(&mut self) {
-        if self.buffer.remove_char(self.location) {
+        if self.buffer.remove_char(self.text_location) {
             self.needs_redraw = true;
         }
     }
-    pub fn enter_search(&mut self)  {
+    pub fn enter_search(&mut self) {
         // todo: store start position
     }
-    pub fn dismiss_search(&mut self)  {
+    pub fn dismiss_search(&mut self) {
         // todo: restore start position
     }
-    pub fn exit_search(&mut self)  {
+    pub fn exit_search(&mut self) {
         // todo: exit search mode
     }
-    pub fn search(&mut self, query: &str)  {
+    pub fn search(&mut self, query: &str) {
         // todo: search for query
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
@@ -118,12 +118,12 @@ impl View {
             .saturating_sub(&self.scroll_offset)
     }
     pub fn text_location_to_position(&self) -> Position {
-        let row = self.location.y;
+        let row = self.text_location.line_index;
         let col = self
             .buffer
             .lines
             .get(row)
-            .map_or(0, |line| line.width_until(self.location.x));
+            .map_or(0, |line| line.width_until(self.text_location.grapheme_index));
         Position { col, row }
     }
 
@@ -148,46 +148,46 @@ impl View {
         self.scroll_into_view();
     }
     fn move_up(&mut self, step: usize) {
-        self.location.y = self.location.y.saturating_sub(step);
+        self.text_location.line_index = self.text_location.line_index.saturating_sub(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
     fn move_down(&mut self, step: usize) {
-        self.location.y = self.location.y.saturating_add(step);
+        self.text_location.line_index = self.text_location.line_index.saturating_add(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
     fn move_left(&mut self) {
-        if self.location.x > 0 {
-            self.location.x = self.location.x.saturating_sub(1);
+        if self.text_location.grapheme_index > 0 {
+            self.text_location.grapheme_index = self.text_location.grapheme_index.saturating_sub(1);
         } else {
             self.move_up(1);
             self.move_to_end_of_line();
         }
     }
     fn move_right(&mut self) {
-        let line_len = self.get_line(self.location.y).map_or(0, Line::len);
-        if self.location.x == line_len {
+        let line_len = self.get_line(self.text_location.line_index).map_or(0, Line::len);
+        if self.text_location.grapheme_index == line_len {
             self.move_to_start_of_line();
             self.move_down(1);
         } else {
-            self.location.x = self.location.x.saturating_add(1);
+            self.text_location.grapheme_index = self.text_location.grapheme_index.saturating_add(1);
         }
     }
     fn move_to_start_of_line(&mut self) {
-        self.location.x = 0;
+        self.text_location.grapheme_index = 0;
     }
     fn move_to_end_of_line(&mut self) {
-        self.location.x = self.get_line(self.location.y).map_or(0, Line::len);
+        self.text_location.grapheme_index = self.get_line(self.text_location.line_index).map_or(0, Line::len);
     }
     fn snap_to_valid_x(&mut self) {
-        self.location.x = min(
-            self.location.x,
-            self.get_line(self.location.y).map_or(0, Line::len),
+        self.text_location.grapheme_index = min(
+            self.text_location.grapheme_index,
+            self.get_line(self.text_location.line_index).map_or(0, Line::len),
         );
     }
     fn snap_to_valid_y(&mut self) {
-        self.location.y = min(self.location.y, self.buffer.height());
+        self.text_location.line_index = min(self.text_location.line_index, self.buffer.height());
     }
     fn scroll_into_view(&mut self) {
         let Position { col, row } = self.text_location_to_position();

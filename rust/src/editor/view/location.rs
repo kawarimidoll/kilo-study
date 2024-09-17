@@ -1,6 +1,6 @@
 #[derive(Copy, Clone, Default)]
 pub struct Location {
     // the position of the document
-    pub x: usize,
-    pub y: usize,
+    pub grapheme_index: usize,
+    pub line_index: usize,
 }

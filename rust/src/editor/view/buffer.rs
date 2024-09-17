@@ -19,30 +19,30 @@ impl Buffer {
         self.lines.is_empty()
     }
     pub fn insert_newline(&mut self, at: Location) -> bool {
-        let Location { x, y } = at;
-        if y >= self.height() {
+        let Location { grapheme_index, line_index } = at;
+        if line_index >= self.height() {
             self.lines.push(Line::default());
         } else {
-            // we have a valid y
-            let second_half = self.lines[y].split_off(x);
-            self.lines.insert(y.saturating_add(1), second_half);
+            // we have a valid line_index
+            let second_half = self.lines[line_index].split_off(grapheme_index);
+            self.lines.insert(line_index.saturating_add(1), second_half);
         }
         self.dirty = self.dirty.saturating_add(1);
         true
     }
     pub fn remove_char(&mut self, at: Location) -> bool {
-        let Location { x, y } = at;
+        let Location { grapheme_index, line_index } = at;
         // out of bounds
-        if y >= self.height() {
+        if line_index >= self.height() {
             return false;
         }
 
-        // below here, we have a valid y
-        if x < self.lines[y].len() {
-            self.lines[y].remove(x, 1);
-        } else if y < self.height().saturating_sub(1) {
-            let next_line = self.lines.remove(y.saturating_add(1));
-            self.lines[y].append(&next_line);
+        // below here, we have a valid line_index
+        if grapheme_index < self.lines[line_index].len() {
+            self.lines[line_index].remove(grapheme_index, 1);
+        } else if line_index < self.height().saturating_sub(1) {
+            let next_line = self.lines.remove(line_index.saturating_add(1));
+            self.lines[line_index].append(&next_line);
         } else {
             // the last line, the last character
             return false;
@@ -51,24 +51,24 @@ impl Buffer {
         true
     }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
-        let Location { x, y } = at;
+        let Location { grapheme_index, line_index } = at;
         // out of bounds
-        if y > self.height() {
+        if line_index > self.height() {
             return false;
         }
 
         let string = c.to_string();
 
         // append a new line
-        if y == self.height() {
+        if line_index == self.height() {
             self.lines.push(Line::from(&string));
             self.dirty = self.dirty.saturating_add(1);
             return true;
         }
 
         // insert a new character in an existing line
-        if let Some(line) = self.lines.get_mut(y) {
-            line.insert(x, &string);
+        if let Some(line) = self.lines.get_mut(line_index) {
+            line.insert(grapheme_index, &string);
             self.dirty = self.dirty.saturating_add(1);
             return true;
         }

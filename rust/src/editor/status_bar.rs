@@ -45,7 +45,7 @@ impl StatusBar {
         let new_status = DocumentStatus {
             filename: format!("{}", view.buffer.file_info).into(),
             total_lines: view.buffer.height(),
-            current_line: view.location.y.saturating_add(1),
+            current_line: view.text_location.line_index.saturating_add(1),
             modified: view.buffer.dirty > 0,
         };
         if self.document_status != new_status {
