@@ -187,9 +187,8 @@ impl Editor {
     fn process_command_during_save(&mut self, command: Command) {
         match command {
             System(Dismiss) => {
-                self.dismiss_prompt();
+                self.show_prompt(PromptType::None);
                 self.message_bar.update_message("Aborted.");
-                self.message_bar.set_needs_redraw(true);
             }
             Edit(InsertNewLine) => {
                 self.save(Some(&self.command_bar.value()));
@@ -203,7 +202,7 @@ impl Editor {
     fn process_command_during_search(&mut self, command: Command) {
         match command {
             System(Dismiss) => {
-                self.dismiss_prompt();
+                self.show_prompt(PromptType::None);
                 self.message_bar.update_message("Aborted.");
                 self.message_bar.set_needs_redraw(true);
             }
@@ -215,10 +214,6 @@ impl Editor {
             Edit(command) => self.command_bar.handle_edit_command(command),
             _ => {}
         }
-    }
-    fn dismiss_prompt(&mut self) {
-        self.prompt_type = PromptType::None;
-        self.message_bar.set_needs_redraw(true);
     }
     fn handle_quit(&mut self) {
         if self.view.buffer.dirty == 0 || self.quit_count == 0 {
