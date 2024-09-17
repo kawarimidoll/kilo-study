@@ -17,6 +17,7 @@ const FILLCHAR_EOB: &str = "~";
 
 struct SearchInfo {
     prev_location: Location,
+    query: Line,
 }
 
 #[derive(Default)]
@@ -76,6 +77,7 @@ impl View {
     pub fn enter_search(&mut self) {
         self.search_info = Some(SearchInfo {
             prev_location: self.text_location,
+            query: Line::default(),
         });
     }
     pub fn dismiss_search(&mut self) {
@@ -89,10 +91,28 @@ impl View {
         self.search_info = None;
     }
     pub fn search(&mut self, query: &str) {
-        if let Some(location) = self.buffer.search(query) {
-            self.text_location = location;
-            self.scroll_into_view();
+        if let Some(search_info) = &mut self.search_info {
+            search_info.query = Line::from(query);
         }
+        self.search_from(self.text_location);
+    }
+    fn search_from(&mut self, from: Location) {
+        if let Some(search_info) = self.search_info.as_ref() {
+            let query = &search_info.query;
+            if query.is_empty() {
+                return;
+            }
+            if let Some(location) = self.buffer.search(query, from) {
+                self.text_location = location;
+                self.scroll_into_view();
+            }
+        } else {
+            #[cfg(debug_assertions)]
+            panic!("search_info is None: bug");
+        }
+    }
+    pub fn search_next(&mut self) {
+        // todo search next
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;
@@ -109,11 +129,10 @@ impl View {
         if messages.len() > self.size.height {
             return;
         }
-        let display_width = self.size.width.saturating_sub(1);
 
-        // we don't care if our welcome message is put *exactly* in the middle.
-        #[allow(clippy::integer_division)]
-        let mut row = self.size.height / 3;
+        // minus 1 for FILLCHAR_EOB
+        let display_width = self.size.width.saturating_sub(1);
+        let mut row = self.size.height.div_ceil(3);
         for mut message in messages {
             if display_width < message.len() {
                 Self::render_line(row, FILLCHAR_EOB);
@@ -136,9 +155,11 @@ impl View {
     }
     pub fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
-        let col = self.buffer.lines.get(row).map_or(0, |line| {
-            line.width_until(self.text_location.grapheme_idx)
-        });
+        let col = self
+            .buffer
+            .lines
+            .get(row)
+            .map_or(0, |line| line.width_until(self.text_location.grapheme_idx));
         Position { col, row }
     }
 

@@ -185,10 +185,17 @@ impl Line {
             .position(|fragment| fragment.start_byte_idx >= byte_idx)
             .map_or(0, |grapheme_idx| grapheme_idx)
     }
-    pub fn search(&self, query: &str) -> Option<GraphemeIdx> {
+    fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> GraphemeIdx {
+        self.fragments
+            .get(grapheme_idx)
+            .map_or(0, |fragment| fragment.start_byte_idx)
+    }
+    pub fn search(&self, query: &str, from_grapheme_idx: GraphemeIdx) -> Option<GraphemeIdx> {
+        let start_byte_idx = self.grapheme_idx_to_byte_idx(from_grapheme_idx);
         self.string
-            .find(query)
-            .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx))
+            .get(start_byte_idx..)
+            .and_then(|substr| substr.find(query))
+            .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx.saturating_add(start_byte_idx)))
     }
     #[allow(dead_code)]
     pub fn search_ignore_case(&self, query: &str) -> Option<GraphemeIdx> {

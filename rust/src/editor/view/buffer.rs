@@ -97,9 +97,15 @@ impl Buffer {
             dirty: 0,
         })
     }
-    pub fn search(&mut self, query: &str) -> Option<Location> {
-        for (line_idx, line) in self.lines.iter().enumerate() {
-            if let Some(grapheme_idx) = line.search(query) {
+    pub fn search(&mut self, query: &str, from: Location) -> Option<Location> {
+        // search from the current line to the end
+        for (line_idx, line) in self.lines.iter().enumerate().skip(from.line_idx) {
+            let from_grapheme_idx = if line_idx == from.line_idx {
+                from.grapheme_idx
+            } else {
+                0
+            };
+            if let Some(grapheme_idx) = line.search(query, from_grapheme_idx) {
                 return Some(Location {
                     grapheme_idx,
                     line_idx,
