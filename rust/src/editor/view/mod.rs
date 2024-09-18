@@ -12,20 +12,12 @@ use super::{
     Col, Position, Row, Size, NAME, VERSION,
 };
 use location::Location;
+use search_info::SearchInfo;
+use search_direction::SearchDirection;
+mod search_info;
+mod search_direction;
 
 const FILLCHAR_EOB: &str = "~";
-
-struct SearchInfo {
-    prev_location: Location,
-    prev_scroll_offset: Position,
-    query: Option<Line>,
-}
-#[derive(Default, Eq, PartialEq, Clone, Copy)]
-enum SearchDirection {
-    #[default]
-    Forward,
-    Backward,
-}
 
 #[derive(Default)]
 pub struct View {
