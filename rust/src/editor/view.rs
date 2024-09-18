@@ -6,7 +6,7 @@ mod buffer;
 mod line;
 mod location;
 use super::{
-    editor_command::{Edit, Move},
+    command::{Edit, Move},
     terminal::{Size, Terminal},
     ui_component::UIComponent,
     Col, Position, Row, NAME, VERSION,

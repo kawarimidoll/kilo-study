@@ -7,10 +7,10 @@ use crossterm::event::{
     KeyEventKind,
 };
 use terminal::{Size, Terminal};
-mod editor_command;
+mod command;
 mod file_info;
 mod terminal;
-use editor_command::{
+use command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewLine,
     Move::{Down, Left, Right, Up},

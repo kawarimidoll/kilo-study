@@ -1,6 +1,6 @@
 use super::terminal::{Size, Terminal};
 use super::ui_component::UIComponent;
-use crate::editor::editor_command::Edit;
+use crate::editor::command::Edit;
 use std::cmp::min;
 use std::io::Error;
 
