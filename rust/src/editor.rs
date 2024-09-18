@@ -6,7 +6,7 @@ use crossterm::event::{
     KeyEvent,
     KeyEventKind,
 };
-use terminal::{Size, Terminal};
+use terminal::Terminal;
 mod command;
 mod file_info;
 mod terminal;
@@ -16,7 +16,9 @@ use command::{
     Move::{Down, Left, Right, Up},
     System::{Dismiss, Quit, Resize, Save, Search},
 };
+use size::Size;
 use view::View;
+mod size;
 mod view;
 use ui_component::UIComponent;
 mod ui_component;

@@ -7,9 +7,9 @@ mod line;
 mod location;
 use super::{
     command::{Edit, Move},
-    terminal::{Size, Terminal},
+    terminal::Terminal,
     ui_component::UIComponent,
-    Col, Position, Row, NAME, VERSION,
+    Col, Position, Row, Size, NAME, VERSION,
 };
 use location::Location;
 

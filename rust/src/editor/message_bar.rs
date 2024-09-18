@@ -1,5 +1,4 @@
-use super::terminal::{Size, Terminal};
-use super::ui_component::UIComponent;
+use super::{terminal::Terminal, ui_component::UIComponent, Size};
 use std::{
     io::Error,
     time::{Duration, Instant},

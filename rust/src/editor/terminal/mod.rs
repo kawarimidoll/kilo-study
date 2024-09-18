@@ -1,4 +1,4 @@
-use super::Position;
+use super::{Position, Size};
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{
     Attribute::{Reset, Reverse},
@@ -10,12 +10,6 @@ use crossterm::terminal::{
 };
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
-
-#[derive(Copy, Clone, Default)]
-pub struct Size {
-    pub width: usize,
-    pub height: usize,
-}
 
 /// Represents the Terminal.
 /// Edge Case for platforms where `usize` < `u16`:
