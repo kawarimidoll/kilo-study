@@ -76,6 +76,7 @@ impl Editor {
         let args: Vec<String> = std::env::args().collect();
         // only load the first file for now
         if let Some(first) = args.get(1) {
+            debug_assert!(!first.is_empty());
             let message = if editor.view.load(first).is_err() {
                 &format!("Could not open file: {first}")
             } else {
@@ -127,6 +128,8 @@ impl Editor {
                 Err(err) => {
                     #[cfg(debug_assertions)]
                     panic!("Could not read event: {err}");
+                    #[cfg(not(debug_assertions))]
+                    let _ = err;
                 }
             }
             self.status_bar.update_status(&self.view);
@@ -295,6 +298,9 @@ impl Editor {
                 row: bottom_row,
             }
         };
+        debug_assert!(caret_position.col < self.terminal_size.width);
+        debug_assert!(caret_position.row < self.terminal_size.height);
+
         let _ = Terminal::move_caret_to(caret_position);
         let _ = Terminal::show_caret();
         let _ = Terminal::execute();

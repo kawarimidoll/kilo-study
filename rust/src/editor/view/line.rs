@@ -78,6 +78,7 @@ pub struct Line {
 
 impl Line {
     pub fn from(string: &str) -> Self {
+        debug_assert!(string.is_empty() || string.lines().count() == 1);
         Self {
             fragments: Self::string_to_fragments(string),
             string: String::from(string),
@@ -142,6 +143,7 @@ impl Line {
     }
 
     pub fn insert(&mut self, at: GraphemeIdx, string: &str) {
+        debug_assert!(at.saturating_sub(1) <= self.grapheme_count());
         if let Some(fragment) = self.fragments.get(at) {
             self.string.insert_str(fragment.start_byte_idx, string);
         } else {
@@ -150,6 +152,7 @@ impl Line {
         self.rebuild_fragments();
     }
     pub fn remove(&mut self, start: GraphemeIdx, length: GraphemeIdx) {
+        debug_assert!(start <= self.grapheme_count());
         if let Some(start_fragment) = self.fragments.get(start) {
             let end = start.saturating_add(length);
             let start_byte_idx = start_fragment.start_byte_idx;
@@ -176,21 +179,38 @@ impl Line {
         }
     }
     fn byte_idx_to_grapheme_idx(&self, byte_idx: ByteIdx) -> GraphemeIdx {
+        debug_assert!(byte_idx <= self.string.len());
         self.fragments
             .iter()
             .position(|fragment| fragment.start_byte_idx >= byte_idx)
-            .map_or(0, |grapheme_idx| grapheme_idx)
+            .map_or_else(
+                || {
+                    #[cfg(debug_assertions)]
+                    panic!("byte_idx_to_grapheme_idx: byte_idx: {byte_idx:?} not found");
+                    #[cfg(not(debug_assertions))]
+                    0
+                },
+                |grapheme_idx| grapheme_idx,
+            )
     }
     fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> ByteIdx {
-        self.fragments
-            .get(grapheme_idx)
-            .map_or(0, |fragment| fragment.start_byte_idx)
+        debug_assert!(grapheme_idx <= self.grapheme_count());
+        self.fragments.get(grapheme_idx).map_or_else(
+            || {
+                #[cfg(debug_assertions)]
+                panic!("grapheme_idx_to_byte_idx: grapheme_idx: {grapheme_idx:?} not found");
+                #[cfg(not(debug_assertions))]
+                0
+            },
+            |fragment| fragment.start_byte_idx,
+        )
     }
     pub fn search_forward(
         &self,
         query: &str,
         from_grapheme_idx: GraphemeIdx,
     ) -> Option<GraphemeIdx> {
+        debug_assert!(from_grapheme_idx <= self.grapheme_count());
         if from_grapheme_idx >= self.grapheme_count() {
             return None;
         }
@@ -205,6 +225,7 @@ impl Line {
         query: &str,
         from_grapheme_idx: GraphemeIdx,
     ) -> Option<GraphemeIdx> {
+        debug_assert!(from_grapheme_idx <= self.grapheme_count());
         if from_grapheme_idx == 0 {
             return None;
         }

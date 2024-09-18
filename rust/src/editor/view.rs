@@ -100,9 +100,12 @@ impl View {
         self.search_info = None;
     }
     fn get_search_query(&self) -> Option<&Line> {
-        self.search_info
+        let query = self
+            .search_info
             .as_ref()
-            .and_then(|search_info| search_info.query.as_ref())
+            .and_then(|search_info| search_info.query.as_ref());
+        debug_assert!(query.is_some(), "Empty search query");
+        query
     }
     pub fn search(&mut self, query: &str) {
         if let Some(search_info) = &mut self.search_info {
@@ -181,6 +184,7 @@ impl View {
     }
     pub fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
+        debug_assert!(row.saturating_sub(1) < self.buffer.height());
         let col = self
             .buffer
             .lines

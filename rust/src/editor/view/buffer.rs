@@ -57,6 +57,7 @@ impl Buffer {
         true
     }
     pub fn insert_char(&mut self, c: char, at: Location) -> bool {
+        debug_assert!(at.line_idx <= self.height());
         let Location {
             grapheme_idx,
             line_idx,

@@ -21,14 +21,13 @@ pub trait UIComponent {
         if !self.needs_redraw() {
             return;
         }
-        match self.draw(origin_y) {
-            Ok(()) => self.set_needs_redraw(false),
-            Err(err) => {
-                #[cfg(debug_assertions)]
-                {
-                    panic!("Failed to render component: {err:?}");
-                }
-            }
+        if let Err(err) = self.draw(origin_y) {
+            #[cfg(debug_assertions)]
+            panic!("Failed to render component: {err:?}");
+            #[cfg(not(debug_assertions))]
+            let _ = err;
+        } else {
+            self.set_needs_redraw(false);
         }
     }
 }
