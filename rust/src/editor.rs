@@ -17,19 +17,11 @@ use command::{
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 use size::Size;
-use view::View;
 mod size;
-mod view;
-use ui_component::UIComponent;
-mod ui_component;
-use status_bar::StatusBar;
-mod status_bar;
-use position::{Col, Position, Row};
+mod ui_components;
 mod position;
-use message_bar::MessageBar;
-mod message_bar;
-use command_bar::CommandBar;
-mod command_bar;
+use position::{Col, Position, Row};
+use ui_components::{CommandBar,MessageBar, StatusBar, UIComponent, View};
 use std::io::Error;
 
 const NAME: &str = env!("CARGO_PKG_NAME");

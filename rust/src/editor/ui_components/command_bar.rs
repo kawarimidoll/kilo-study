@@ -1,5 +1,5 @@
-use super::{terminal::Terminal, ui_component::UIComponent, Size};
-use crate::editor::command::Edit;
+use super::super::{command::Edit, terminal::Terminal, Size};
+use super::ui_component::UIComponent;
 use std::cmp::min;
 use std::io::Error;
 

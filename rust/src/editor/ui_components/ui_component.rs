@@ -1,4 +1,4 @@
-use super::Size;
+use super::super::Size;
 use std::io::Error;
 
 pub trait UIComponent {

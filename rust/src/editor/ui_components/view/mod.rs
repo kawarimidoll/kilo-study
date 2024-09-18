@@ -5,12 +5,12 @@ use std::io::Error;
 mod buffer;
 mod line;
 mod location;
-use super::{
+use super::super::{
     command::{Edit, Move},
     terminal::Terminal,
-    ui_component::UIComponent,
     Col, Position, Row, Size, NAME, VERSION,
 };
+use super::ui_component::UIComponent;
 use location::Location;
 use search_info::SearchInfo;
 use search_direction::SearchDirection;

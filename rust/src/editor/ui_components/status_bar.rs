@@ -1,4 +1,5 @@
-use super::{terminal::Terminal, ui_component::UIComponent, view::View, Size};
+use super::super::{terminal::Terminal, Size};
+use super::{ui_component::UIComponent, view::View};
 use std::io::Error;
 
 #[derive(Default, Eq, PartialEq)]
