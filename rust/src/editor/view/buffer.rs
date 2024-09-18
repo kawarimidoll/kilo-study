@@ -97,7 +97,7 @@ impl Buffer {
             dirty: 0,
         })
     }
-    pub fn search(&mut self, query: &str, from: Location) -> Option<Location> {
+    pub fn search_forward(&self, query: &str, from: Location) -> Option<Location> {
         // search from the current line to the end
         for (line_idx, line) in self.lines.iter().enumerate().skip(from.line_idx) {
             let from_grapheme_idx = if line_idx == from.line_idx {
@@ -105,7 +105,7 @@ impl Buffer {
             } else {
                 0
             };
-            if let Some(grapheme_idx) = line.search(query, from_grapheme_idx) {
+            if let Some(grapheme_idx) = line.search_forward(query, from_grapheme_idx) {
                 return Some(Location {
                     grapheme_idx,
                     line_idx,
@@ -115,13 +115,17 @@ impl Buffer {
         // wrap around to the beginning
         for (line_idx, line) in self.lines.iter().enumerate().take(from.line_idx) {
             let from_grapheme_idx = 0;
-            if let Some(grapheme_idx) = line.search(query, from_grapheme_idx) {
+            if let Some(grapheme_idx) = line.search_forward(query, from_grapheme_idx) {
                 return Some(Location {
                     grapheme_idx,
                     line_idx,
                 });
             }
         }
+        None
+    }
+    pub fn search_backward(&self, _query: &str, _from: Location) -> Option<Location> {
+        // todo implement search_backward
         None
     }
     pub fn save(&mut self) -> Result<(), Error> {

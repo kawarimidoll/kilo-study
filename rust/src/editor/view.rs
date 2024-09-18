@@ -18,7 +18,13 @@ const FILLCHAR_EOB: &str = "~";
 struct SearchInfo {
     prev_location: Location,
     prev_scroll_offset: Position,
-    query: Line,
+    query: Option<Line>,
+}
+#[derive(Default, Eq, PartialEq)]
+enum SearchDirection {
+    #[default]
+    Forward,
+    Backward,
 }
 
 #[derive(Default)]
@@ -79,7 +85,7 @@ impl View {
         self.search_info = Some(SearchInfo {
             prev_location: self.text_location,
             prev_scroll_offset: self.scroll_offset,
-            query: Line::default(),
+            query: None,
         });
     }
     pub fn dismiss_search(&mut self) {
@@ -93,41 +99,46 @@ impl View {
     pub fn exit_search(&mut self) {
         self.search_info = None;
     }
+    fn get_search_query(&self) -> Option<&Line> {
+        self.search_info
+            .as_ref()
+            .and_then(|search_info| search_info.query.as_ref())
+    }
     pub fn search(&mut self, query: &str) {
         if let Some(search_info) = &mut self.search_info {
-            search_info.query = Line::from(query);
+            search_info.query = Some(Line::from(query));
         }
-        self.search_from(self.text_location);
+        self.search_in_direction(self.text_location, SearchDirection::default());
     }
-    fn search_from(&mut self, from: Location) {
-        if let Some(search_info) = self.search_info.as_ref() {
-            let query = &search_info.query;
+    fn search_in_direction(&mut self, from: Location, direction: SearchDirection) {
+        let option_location = self.get_search_query().and_then(|query| {
             if query.is_empty() {
-                return;
+                None
+            } else if direction == SearchDirection::Forward {
+                self.buffer.search_forward(query, from)
+            } else {
+                self.buffer.search_backward(query, from)
             }
-            if let Some(location) = self.buffer.search(query, from) {
-                self.text_location = location;
-                self.center_text_location();
-            }
-        } else {
-            #[cfg(debug_assertions)]
-            panic!("search_info is None: bug");
+        });
+
+        if let Some(location) = option_location {
+            self.text_location = location;
+            self.center_text_location();
         }
     }
     pub fn search_next(&mut self) {
-        if let Some(search_info) = self.search_info.as_ref() {
-            let step_right = min(search_info.query.grapheme_count(), 1);
-            let location = Location {
-                grapheme_idx: self.text_location.grapheme_idx.saturating_add(step_right),
-                line_idx: self.text_location.line_idx,
-            };
-            self.search_from(location);
-        } else {
-            #[cfg(debug_assertions)]
-            panic!("search_info is None: bug");
-            #[cfg(not(debug_assertions))]
-            return;
-        }
+        let step_right = self
+            .get_search_query()
+            .map_or(1, |query| min(query.grapheme_count(), 1));
+
+        let location = Location {
+            grapheme_idx: self.text_location.grapheme_idx.saturating_add(step_right),
+            line_idx: self.text_location.line_idx,
+        };
+        self.search_in_direction(location, SearchDirection::Forward);
+    }
+    pub fn search_prev(&mut self) {
+        // todo implement search_prev
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;

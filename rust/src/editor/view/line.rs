@@ -186,7 +186,10 @@ impl Line {
             .get(grapheme_idx)
             .map_or(0, |fragment| fragment.start_byte_idx)
     }
-    pub fn search(&self, query: &str, from_grapheme_idx: GraphemeIdx) -> Option<GraphemeIdx> {
+    pub fn search_forward(&self, query: &str, from_grapheme_idx: GraphemeIdx) -> Option<GraphemeIdx> {
+        if from_grapheme_idx >= self.grapheme_count() {
+            return None;
+        }
         let start_byte_idx = self.grapheme_idx_to_byte_idx(from_grapheme_idx);
         self.string
             .get(start_byte_idx..)
