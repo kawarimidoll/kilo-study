@@ -20,7 +20,7 @@ struct SearchInfo {
     prev_scroll_offset: Position,
     query: Option<Line>,
 }
-#[derive(Default, Eq, PartialEq)]
+#[derive(Default, Eq, PartialEq, Clone, Copy)]
 enum SearchDirection {
     #[default]
     Forward,
@@ -184,7 +184,7 @@ impl View {
     }
     pub fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
-        debug_assert!(row.saturating_sub(1) < self.buffer.height());
+        debug_assert!(row < self.buffer.height().saturating_add(1));
         let col = self
             .buffer
             .lines
