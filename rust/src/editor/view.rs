@@ -115,7 +115,19 @@ impl View {
         }
     }
     pub fn search_next(&mut self) {
-        // todo search next
+        if let Some(search_info) = self.search_info.as_ref() {
+            let step_right = min(search_info.query.grapheme_count(), 1);
+            let location = Location {
+                grapheme_idx: self.text_location.grapheme_idx.saturating_add(step_right),
+                line_idx: self.text_location.line_idx,
+            };
+            self.search_from(location);
+        } else {
+            #[cfg(debug_assertions)]
+            panic!("search_info is None: bug");
+            #[cfg(not(debug_assertions))]
+            return;
+        }
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;
