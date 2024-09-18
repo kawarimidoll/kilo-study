@@ -112,6 +112,16 @@ impl Buffer {
                 });
             }
         }
+        // wrap around to the beginning
+        for (line_idx, line) in self.lines.iter().enumerate().take(from.line_idx) {
+            let from_grapheme_idx = 0;
+            if let Some(grapheme_idx) = line.search(query, from_grapheme_idx) {
+                return Some(Location {
+                    grapheme_idx,
+                    line_idx,
+                });
+            }
+        }
         None
     }
     pub fn save(&mut self) -> Result<(), Error> {
