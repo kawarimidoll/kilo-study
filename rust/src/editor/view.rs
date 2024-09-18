@@ -17,6 +17,7 @@ const FILLCHAR_EOB: &str = "~";
 
 struct SearchInfo {
     prev_location: Location,
+    prev_scroll_offset: Position,
     query: Line,
 }
 
@@ -77,15 +78,17 @@ impl View {
     pub fn enter_search(&mut self) {
         self.search_info = Some(SearchInfo {
             prev_location: self.text_location,
+            prev_scroll_offset: self.scroll_offset,
             query: Line::default(),
         });
     }
     pub fn dismiss_search(&mut self) {
         if let Some(search_info) = &self.search_info {
             self.text_location = search_info.prev_location;
+            self.scroll_offset = search_info.prev_scroll_offset;
+            self.set_needs_redraw(true);
         }
         self.exit_search();
-        self.scroll_into_view();
     }
     pub fn exit_search(&mut self) {
         self.search_info = None;
@@ -104,7 +107,7 @@ impl View {
             }
             if let Some(location) = self.buffer.search(query, from) {
                 self.text_location = location;
-                self.scroll_into_view();
+                self.center_text_location();
             }
         } else {
             #[cfg(debug_assertions)]
@@ -229,6 +232,15 @@ impl View {
     }
     fn snap_to_valid_y(&mut self) {
         self.text_location.line_idx = min(self.text_location.line_idx, self.buffer.height());
+    }
+    fn center_text_location(&mut self) {
+        let Size { width, height } = self.size;
+        let Position { row, col } = self.text_location_to_position();
+        let mid_width = width.div_ceil(2);
+        let mid_height = height.div_ceil(2);
+        self.scroll_offset.col = col.saturating_sub(mid_width);
+        self.scroll_offset.row = row.saturating_sub(mid_height);
+        self.set_needs_redraw(true);
     }
     fn scroll_into_view(&mut self) {
         let Position { col, row } = self.text_location_to_position();
