@@ -16,10 +16,7 @@ type ByteIdx = usize;
 
 impl GraphemeWidth {
     fn saturating_add(&self, other: usize) -> usize {
-        match self {
-            Self::Half => other.saturating_add(1),
-            Self::Full => other.saturating_add(2),
-        }
+        other.saturating_add(self.as_usize())
     }
     fn as_usize(&self) -> usize {
         match self {
@@ -34,11 +31,11 @@ struct TextFragment {
     grapheme: String,
     width: GraphemeWidth,
     replacement: Option<char>,
-    start_byte_idx: usize,
+    start_byte_idx: ByteIdx,
 }
 
 impl TextFragment {
-    pub fn new(start_byte_idx: usize, grapheme: &str) -> Self {
+    pub fn new(start_byte_idx: ByteIdx, grapheme: &str) -> Self {
         let replacement = Self::get_replacement(grapheme);
         // for now, replacement character is always Half width
         let width = if grapheme.width() <= 1 || replacement.is_some() {
@@ -185,7 +182,7 @@ impl Line {
             .position(|fragment| fragment.start_byte_idx >= byte_idx)
             .map_or(0, |grapheme_idx| grapheme_idx)
     }
-    fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> GraphemeIdx {
+    fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> ByteIdx {
         self.fragments
             .get(grapheme_idx)
             .map_or(0, |fragment| fragment.start_byte_idx)
