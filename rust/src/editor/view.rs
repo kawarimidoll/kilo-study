@@ -138,7 +138,7 @@ impl View {
         self.search_in_direction(location, SearchDirection::Forward);
     }
     pub fn search_prev(&mut self) {
-        // todo implement search_prev
+        self.search_in_direction(self.text_location, SearchDirection::Backward);
     }
     pub fn load(&mut self, filename: &str) -> Result<(), Error> {
         let buffer = Buffer::load(filename)?;

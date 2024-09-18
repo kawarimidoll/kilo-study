@@ -13,7 +13,7 @@ mod terminal;
 use editor_command::{
     Command::{self, Edit, Move, System},
     Edit::InsertNewLine,
-    Move::{Down, Right},
+    Move::{Down, Left, Right, Up},
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 use view::View;
@@ -220,6 +220,7 @@ impl Editor {
                 self.view.search(&self.command_bar.value());
             }
             Move(Down | Right) => self.view.search_next(),
+            Move(Up | Left) => self.view.search_prev(),
             _ => {}
         }
     }

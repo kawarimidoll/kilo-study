@@ -186,7 +186,11 @@ impl Line {
             .get(grapheme_idx)
             .map_or(0, |fragment| fragment.start_byte_idx)
     }
-    pub fn search_forward(&self, query: &str, from_grapheme_idx: GraphemeIdx) -> Option<GraphemeIdx> {
+    pub fn search_forward(
+        &self,
+        query: &str,
+        from_grapheme_idx: GraphemeIdx,
+    ) -> Option<GraphemeIdx> {
         if from_grapheme_idx >= self.grapheme_count() {
             return None;
         }
@@ -195,6 +199,24 @@ impl Line {
             .get(start_byte_idx..)
             .and_then(|substr| substr.find(query))
             .map(|byte_idx| self.byte_idx_to_grapheme_idx(byte_idx.saturating_add(start_byte_idx)))
+    }
+    pub fn search_backward(
+        &self,
+        query: &str,
+        from_grapheme_idx: GraphemeIdx,
+    ) -> Option<GraphemeIdx> {
+        if from_grapheme_idx == 0 {
+            return None;
+        }
+        let end_byte_idx = if from_grapheme_idx == self.grapheme_count() {
+            self.string.len()
+        } else {
+            self.grapheme_idx_to_byte_idx(from_grapheme_idx)
+        };
+        self.string
+            .get(..end_byte_idx)
+            .and_then(|substr| substr.match_indices(query).last())
+            .map(|(byte_idx, _)| self.byte_idx_to_grapheme_idx(byte_idx))
     }
     #[allow(dead_code)]
     pub fn search_ignore_case(&self, query: &str) -> Option<GraphemeIdx> {
