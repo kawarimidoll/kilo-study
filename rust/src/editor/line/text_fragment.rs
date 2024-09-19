@@ -1,5 +1,5 @@
 use super::GraphemeWidth;
-use crate::editor::ByteIdx;
+use crate::prelude::ByteIdx;
 use unicode_width::UnicodeWidthStr;
 
 #[derive(Clone, Debug)]

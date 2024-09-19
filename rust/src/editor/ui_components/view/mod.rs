@@ -9,7 +9,6 @@ use super::super::{
     Line,
 };
 use super::ui_component::UIComponent;
-use crate::editor::GraphemeIdx;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 mod search_direction;

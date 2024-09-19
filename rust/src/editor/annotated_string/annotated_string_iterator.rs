@@ -1,14 +1,12 @@
 use super::{AnnotatedString, AnnotatedStringPart};
-use crate::editor::ByteIdx;
+use crate::prelude::ByteIdx;
 use std::cmp::min;
 
-#[allow(dead_code)]
 pub struct AnnotatedStringIterator<'a> {
     pub annotated_string: &'a AnnotatedString,
     pub current_byte_idx: ByteIdx,
 }
 
-#[allow(dead_code)]
 // Any item the iterator produces lives as long as the iterator itself, because of lifetime 'a
 impl<'a> Iterator for AnnotatedStringIterator<'a> {
     type Item = AnnotatedStringPart<'a>;

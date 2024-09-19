@@ -23,7 +23,6 @@ mod attribute;
 /// And should you attempt to set the caret out of those bounds, it will also be truncated.
 pub struct Terminal;
 
-#[allow(dead_code)]
 impl Terminal {
     pub fn terminate() -> Result<(), Error> {
         Self::leave_alternate_screen()?;

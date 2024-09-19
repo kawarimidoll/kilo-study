@@ -1,5 +1,5 @@
-use crate::editor::{AnnotatedString, AnnotationType, GraphemeIdx};
-use crate::prelude::{ByteIdx, ColIdx};
+use crate::editor::{AnnotatedString, AnnotationType};
+use crate::prelude::{ByteIdx, ColIdx, GraphemeIdx};
 use grapheme_width::GraphemeWidth;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::{Deref, Range};

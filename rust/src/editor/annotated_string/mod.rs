@@ -1,4 +1,4 @@
-use crate::editor::ByteIdx;
+use crate::prelude::ByteIdx;
 use std::cmp::{max, min};
 use std::fmt::{Display, Formatter, Result};
 

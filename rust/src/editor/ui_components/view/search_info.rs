@@ -1,4 +1,5 @@
-use super::{Line, Location, Position};
+use super::Line;
+use crate::prelude::{Location, Position};
 
 pub struct SearchInfo {
     pub prev_location: Location,

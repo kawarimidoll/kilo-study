@@ -1,5 +1,5 @@
 use super::AnnotationType;
-use crate::editor::ByteIdx;
+use crate::prelude::ByteIdx;
 
 #[derive(Debug)]
 pub struct Annotation {
