@@ -6,7 +6,7 @@ use unicode_width::UnicodeWidthStr;
 pub struct TextFragment {
     pub grapheme: String,
     pub width: GraphemeWidth,
-    pub replacement: Option<String>,
+    pub replacement: Option<char>,
     pub start_byte_idx: ByteIdx,
 }
 
@@ -27,20 +27,20 @@ impl TextFragment {
             start_byte_idx,
         }
     }
-    fn get_replacement(grapheme: &str) -> Option<String> {
+    fn get_replacement(grapheme: &str) -> Option<char> {
         let g_width = grapheme.width();
         match grapheme {
             " " => None,
-            "\t" => Some("→".to_string()),
-            _ if g_width > 0 && grapheme.trim().is_empty() => Some("␣".to_string()),
-            _ if g_width == 0 => Some("·".to_string()),
+            "\t" => Some('→'),
+            _ if g_width > 0 && grapheme.trim().is_empty() => Some('␣'),
+            _ if g_width == 0 => Some('·'),
             _ => {
                 let mut chars = grapheme.chars();
                 if let Some(ch) = chars.next() {
                     if ch.is_control() && chars.next().is_none() {
                         // let replacement = ((ch as u8) + 64) as char;
-                        // return Some(format!("^{replacement}").to_string());
-                        return Some("▯".to_string());
+                        // return Some(format!('^{replacement}').to_string());
+                        return Some('▯');
                     }
                 }
                 None

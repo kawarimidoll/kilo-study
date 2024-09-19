@@ -42,7 +42,7 @@ impl Line {
     /// - query: the query to highlight in the annotated string.
     /// - selected_match: the selected match to highlight in the annotated string. this is
     ///   only applied if the query is not empty.
-    fn get_annotated_visible_substr(
+    pub fn get_annotated_visible_substr(
         &self,
         range: Range<ColIdx>,
         query: Option<&str>,

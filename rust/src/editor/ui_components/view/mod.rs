@@ -5,6 +5,8 @@ use std::io::Error;
 mod buffer;
 mod line;
 mod location;
+use crate::editor::GraphemeIdx;
+
 use super::super::{
     command::{Edit, Move},
     terminal::Terminal,
@@ -12,10 +14,10 @@ use super::super::{
 };
 use super::ui_component::UIComponent;
 use location::Location;
-use search_info::SearchInfo;
 use search_direction::SearchDirection;
-mod search_info;
+use search_info::SearchInfo;
 mod search_direction;
+mod search_info;
 
 const FILLCHAR_EOB: &str = "~";
 
@@ -307,11 +309,22 @@ impl UIComponent for View {
         let right = left.saturating_add(width);
         let end_y = origin_y.saturating_add(height);
         for current_row in origin_y..end_y {
-            let line_text = self.get_line(current_row.saturating_add(top)).map_or_else(
-                || FILLCHAR_EOB.to_string(),
-                |line| line.get_visible_graphemes(left..right),
-            );
-            Self::render_line(current_row, &line_text);
+            let line_idx = current_row.saturating_add(top);
+            if let Some(line) = self.get_line(line_idx) {
+                let query = self
+                    .search_info
+                    .as_ref()
+                    .and_then(|search_info| search_info.query.as_deref());
+                let selected_match: Option<GraphemeIdx> = (self.text_location.line_idx == line_idx
+                    && query.is_some())
+                .then_some(self.text_location.grapheme_idx);
+                Terminal::print_annotated_row(
+                    current_row,
+                    &line.get_annotated_visible_substr(left..right, query, selected_match),
+                )?;
+            } else {
+                Self::render_line(current_row, FILLCHAR_EOB);
+            }
         }
         if self.buffer.is_empty() {
             self.draw_welcome_message();
