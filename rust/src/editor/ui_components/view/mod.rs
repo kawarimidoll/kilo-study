@@ -6,7 +6,7 @@ mod buffer;
 use super::super::{
     command::{Edit, Move},
     terminal::Terminal,
-    Line
+    Line,
 };
 use super::ui_component::UIComponent;
 use crate::editor::GraphemeIdx;

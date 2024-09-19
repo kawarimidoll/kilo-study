@@ -1,12 +1,9 @@
 use crate::prelude::Size;
 use crossterm::event::{
-    KeyCode::{
-        Char, Esc,
-    },
+    KeyCode::{Char, Esc},
     KeyEvent, KeyModifiers,
 };
 use std::convert::TryFrom;
-
 
 #[derive(Copy, Clone)]
 pub enum System {

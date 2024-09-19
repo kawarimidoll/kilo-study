@@ -4,8 +4,8 @@ use std::fmt::{Display, Formatter, Result};
 
 use annotated_string_iterator::AnnotatedStringIterator;
 use annotated_string_part::AnnotatedStringPart;
-mod annotated_string_part;
 mod annotated_string_iterator;
+mod annotated_string_part;
 use annotation::Annotation;
 mod annotation;
 pub use annotation_type::AnnotationType;

@@ -1,7 +1,5 @@
 use crossterm::event::{
-    KeyCode::{
-        Backspace, Char, Delete, Enter, Tab,
-    },
+    KeyCode::{Backspace, Char, Delete, Enter, Tab},
     KeyEvent, KeyModifiers,
 };
 use std::convert::TryFrom;

@@ -1,14 +1,12 @@
-use crossterm::event::
-    Event::{self, Key}
-;
 use crate::prelude::Size;
+use crossterm::event::Event::{self, Key};
 use std::convert::TryFrom;
+mod edit;
 mod movecommand;
 mod system;
-mod edit;
-pub use system::System;
 pub use edit::Edit;
 pub use movecommand::Move;
+pub use system::System;
 
 #[derive(Copy, Clone)]
 pub enum Command {
