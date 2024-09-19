@@ -1,10 +1,6 @@
 use crossterm::style::Color;
 
-#[allow(dead_code)]
-pub enum AnnotationType {
-    Match,
-    SelectedMatch,
-}
+use crate::editor::annotated_string::AnnotationType;
 
 pub struct Attribute {
     pub foreground: Option<Color>,

@@ -17,12 +17,14 @@ use command::{
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 use size::Size;
+mod position;
 mod size;
 mod ui_components;
-mod position;
+use annotated_string::{AnnotatedString, AnnotationType};
 use position::{Col, Position, Row};
-use ui_components::{CommandBar,MessageBar, StatusBar, UIComponent, View};
+mod annotated_string;
 use std::io::Error;
+use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 pub type GraphemeIdx = usize;
 pub type ByteIdx = usize;
