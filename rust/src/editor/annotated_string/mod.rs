@@ -1,7 +1,11 @@
 use crate::editor::ByteIdx;
 use std::fmt::{Display, Formatter, Result};
 
+use annotated_string_iterator::AnnotatedStringIterator;
+mod annotated_string_iterator;
+
 #[allow(dead_code)]
+#[derive(Clone, Copy)]
 pub enum AnnotationType {
     Match,
     SelectedMatch,
@@ -12,6 +16,12 @@ pub struct Annotation {
     annotation_type: AnnotationType,
     start_byte_idx: ByteIdx,
     end_byte_idx: ByteIdx,
+}
+
+#[allow(dead_code)]
+pub struct AnnotatedStringPart<'a> {
+    string: &'a str,
+    annotation_type: Option<AnnotationType>,
 }
 
 #[allow(dead_code)]
@@ -46,5 +56,17 @@ impl AnnotatedString {
 impl Display for AnnotatedString {
     fn fmt(&self, formatter: &mut Formatter) -> Result {
         write!(formatter, "{}", self.string)
+    }
+}
+
+impl <'a> IntoIterator for &'a AnnotatedString {
+    type Item = AnnotatedStringPart<'a>;
+    type IntoIter = AnnotatedStringIterator<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        AnnotatedStringIterator {
+            annotated_string: self,
+            current_byte_idx: 0,
+        }
     }
 }
