@@ -5,7 +5,6 @@ use std::fmt::{Display, Formatter, Result};
 use annotated_string_iterator::AnnotatedStringIterator;
 mod annotated_string_iterator;
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub enum AnnotationType {
     Match,
@@ -19,7 +18,6 @@ pub struct Annotation {
     end_byte_idx: ByteIdx,
 }
 
-#[allow(dead_code)]
 pub struct AnnotatedStringPart<'a> {
     pub string: &'a str,
     pub annotation_type: Option<AnnotationType>,

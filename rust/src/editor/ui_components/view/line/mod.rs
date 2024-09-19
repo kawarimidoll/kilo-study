@@ -7,7 +7,7 @@ mod grapheme_width;
 mod text_fragment;
 use text_fragment::TextFragment;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Line {
     fragments: Vec<TextFragment>,
     string: String,
@@ -21,21 +21,15 @@ impl Line {
             string: String::from(string),
         }
     }
-    fn rebuild_fragments(&mut self) {
-        self.fragments = Self::string_to_fragments(&self.string);
-    }
     fn string_to_fragments(string: &str) -> Vec<TextFragment> {
         string
             .grapheme_indices(true)
             .map(|(start_byte_idx, grapheme)| TextFragment::new(start_byte_idx, grapheme))
             .collect()
     }
-    // fn fragments_to_string(fragments: Vec<TextFragment>) -> String {
-    //     fragments
-    //         .iter()
-    //         .map(|fragment| fragment.grapheme.clone())
-    //         .collect()
-    // }
+    fn rebuild_fragments(&mut self) {
+        self.fragments = Self::string_to_fragments(&self.string);
+    }
     pub fn get_visible_graphemes(&self, range: Range<ColIdx>) -> String {
         self.get_annotated_visible_substr(range, None, None)
             .to_string()
@@ -54,10 +48,7 @@ impl Line {
         query: Option<&str>,
         selected_match: Option<GraphemeIdx>,
     ) -> AnnotatedString {
-        let start = range.start;
-        let end = range.end;
-
-        if start >= end {
+        if range.start >= range.end {
             return AnnotatedString::default();
         }
         let mut result = AnnotatedString::from(&self.string);
@@ -66,19 +57,21 @@ impl Line {
             if !query.is_empty() {
                 self.find_all(query, 0..self.string.len()).iter().for_each(
                     |(start_byte_idx, grapheme_idx)| {
-                        let end_byte_idx = start_byte_idx.saturating_add(query.len());
-                        // check if selected_match is present and it has the same
-                        // grapheme_idx as the current match
-                        // why saturating_add(1)? to avoid SelectedMatch when selected_match is None
-                        let annotation_type: AnnotationType = if selected_match
-                            .unwrap_or(grapheme_idx.saturating_add(1))
-                            == *grapheme_idx
-                        {
-                            AnnotationType::SelectedMatch
-                        } else {
-                            AnnotationType::Match
-                        };
-                        result.push(annotation_type, *start_byte_idx, end_byte_idx);
+                        if let Some(selected_match) = selected_match {
+                            if *grapheme_idx == selected_match {
+                                result.push(
+                                    AnnotationType::SelectedMatch,
+                                    *start_byte_idx,
+                                    start_byte_idx.saturating_add(query.len()),
+                                );
+                                return;
+                            }
+                        }
+                        result.push(
+                            AnnotationType::Match,
+                            *start_byte_idx,
+                            start_byte_idx.saturating_add(query.len()),
+                        );
                     },
                 );
             }
@@ -139,7 +132,7 @@ impl Line {
 
             // fragments is fully within the range below
             if range.start <= fragment_start && fragment_end <= range.end {
-                if let Some(replacement) = &fragment.replacement {
+                if let Some(replacement) = fragment.replacement {
                     let start_byte_idx = fragment.start_byte_idx;
                     let end_byte_idx = start_byte_idx.saturating_add(fragment.grapheme.len());
                     result.replace(start_byte_idx, end_byte_idx, &replacement.to_string());
@@ -152,7 +145,7 @@ impl Line {
     pub fn grapheme_count(&self) -> GraphemeIdx {
         self.fragments.len()
     }
-    pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> GraphemeIdx {
+    pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> Col {
         self.fragments
             .iter()
             .take(grapheme_idx)
@@ -192,9 +185,9 @@ impl Line {
 
     pub fn split_off(&mut self, at: GraphemeIdx) -> Self {
         if let Some(fragment) = self.fragments.get(at) {
-            let reminder = self.string.split_off(fragment.start_byte_idx);
+            let remainder = self.string.split_off(fragment.start_byte_idx);
             self.rebuild_fragments();
-            Self::from(&reminder)
+            Self::from(&remainder)
         } else {
             Self::default()
         }
@@ -209,6 +202,9 @@ impl Line {
     }
     fn grapheme_idx_to_byte_idx(&self, grapheme_idx: GraphemeIdx) -> ByteIdx {
         debug_assert!(grapheme_idx <= self.grapheme_count());
+        if grapheme_idx == 0 || self.grapheme_count() == 0 {
+            return 0;
+        }
         self.fragments.get(grapheme_idx).map_or_else(
             || {
                 #[cfg(debug_assertions)]
@@ -225,7 +221,7 @@ impl Line {
         from_grapheme_idx: GraphemeIdx,
     ) -> Option<GraphemeIdx> {
         debug_assert!(from_grapheme_idx <= self.grapheme_count());
-        if from_grapheme_idx >= self.grapheme_count() {
+        if from_grapheme_idx == self.grapheme_count() {
             return None;
         }
         let start_byte_idx = self.grapheme_idx_to_byte_idx(from_grapheme_idx);
