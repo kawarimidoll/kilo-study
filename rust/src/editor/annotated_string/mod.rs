@@ -3,25 +3,13 @@ use std::cmp::{max, min};
 use std::fmt::{Display, Formatter, Result};
 
 use annotated_string_iterator::AnnotatedStringIterator;
+use annotated_string_part::AnnotatedStringPart;
+mod annotated_string_part;
 mod annotated_string_iterator;
-
-#[derive(Clone, Copy, Debug)]
-pub enum AnnotationType {
-    Match,
-    SelectedMatch,
-}
-
-#[derive(Debug)]
-pub struct Annotation {
-    annotation_type: AnnotationType,
-    start_byte_idx: ByteIdx,
-    end_byte_idx: ByteIdx,
-}
-
-pub struct AnnotatedStringPart<'a> {
-    pub string: &'a str,
-    pub annotation_type: Option<AnnotationType>,
-}
+use annotation::Annotation;
+mod annotation;
+pub use annotation_type::AnnotationType;
+pub mod annotation_type;
 
 #[derive(Default, Debug)]
 pub struct AnnotatedString {

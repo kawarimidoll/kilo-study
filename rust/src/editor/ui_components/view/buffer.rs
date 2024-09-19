@@ -1,4 +1,4 @@
-use super::{line::Line, location::Location};
+use super::{location::Location, Line};
 use std::fs::{read_to_string, File};
 use std::io::{Error, Write};
 

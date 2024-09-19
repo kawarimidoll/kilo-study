@@ -30,6 +30,7 @@ impl Line {
     fn rebuild_fragments(&mut self) {
         self.fragments = Self::string_to_fragments(&self.string);
     }
+    #[allow(dead_code)]
     pub fn get_visible_graphemes(&self, range: Range<ColIdx>) -> String {
         self.get_annotated_visible_substr(range, None, None)
             .to_string()

@@ -1,18 +1,15 @@
 use buffer::Buffer;
-use line::Line;
 use std::cmp::min;
 use std::io::Error;
 mod buffer;
-mod line;
 mod location;
-use crate::editor::GraphemeIdx;
-
 use super::super::{
     command::{Edit, Move},
     terminal::Terminal,
-    Col, Position, Row, Size, NAME, VERSION,
+    Col, Line, Position, Row, Size, NAME, VERSION,
 };
 use super::ui_component::UIComponent;
+use crate::editor::GraphemeIdx;
 use location::Location;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;

@@ -24,6 +24,8 @@ use annotated_string::{AnnotatedString, AnnotationType};
 use position::{Col, Position, Row};
 mod annotated_string;
 use std::io::Error;
+mod line;
+use line::Line;
 use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 pub type GraphemeIdx = usize;
