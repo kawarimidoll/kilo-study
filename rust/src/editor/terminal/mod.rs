@@ -1,8 +1,9 @@
 use super::{Position, Size};
+use attribute::Attribute;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{
     Attribute::{Reset, Reverse},
-    Print,
+    Print, ResetColor, SetBackgroundColor, SetForegroundColor,
 };
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, size, Clear, ClearType, DisableLineWrap, EnableLineWrap,
@@ -10,6 +11,7 @@ use crossterm::terminal::{
 };
 use crossterm::{queue, Command};
 use std::io::{stdout, Error, Write};
+mod attribute;
 
 /// Represents the Terminal.
 /// Edge Case for platforms where `usize` < `u16`:
@@ -19,6 +21,7 @@ use std::io::{stdout, Error, Write};
 /// And should you attempt to set the caret out of those bounds, it will also be truncated.
 pub struct Terminal;
 
+#[allow(dead_code)]
 impl Terminal {
     pub fn terminate() -> Result<(), Error> {
         Self::leave_alternate_screen()?;
@@ -89,6 +92,19 @@ impl Terminal {
         Self::move_caret_to(Position { col: 0, row })?;
         Self::clear_line()?;
         Self::print(line_text)?;
+        Ok(())
+    }
+    pub fn set_attribute(attribute: &Attribute) -> Result<(), Error> {
+        if let Some(foreground_color) = attribute.foreground {
+            Self::queue_command(SetForegroundColor(foreground_color))?;
+        }
+        if let Some(background_color) = attribute.background {
+            Self::queue_command(SetBackgroundColor(background_color))?;
+        }
+        Ok(())
+    }
+    pub fn reset_color() -> Result<(), Error> {
+        Self::queue_command(ResetColor)?;
         Ok(())
     }
     pub fn print_invert_row(row: usize, line_text: &str) -> Result<(), Error> {
