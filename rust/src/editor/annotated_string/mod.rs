@@ -20,8 +20,8 @@ pub struct Annotation {
 
 #[allow(dead_code)]
 pub struct AnnotatedStringPart<'a> {
-    string: &'a str,
-    annotation_type: Option<AnnotationType>,
+    pub string: &'a str,
+    pub annotation_type: Option<AnnotationType>,
 }
 
 #[allow(dead_code)]

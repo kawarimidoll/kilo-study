@@ -1,4 +1,5 @@
-use super::{Position, Size};
+use super::annotated_string::AnnotatedStringPart;
+use super::{annotated_string, AnnotatedString, Position, Size};
 use attribute::Attribute;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{
@@ -92,6 +93,24 @@ impl Terminal {
         Self::move_caret_to(Position { col: 0, row })?;
         Self::clear_line()?;
         Self::print(line_text)?;
+        Ok(())
+    }
+    pub fn print_annotated_row(
+        row: usize,
+        annotated_string: &AnnotatedString,
+    ) -> Result<(), Error> {
+        Self::move_caret_to(Position { col: 0, row })?;
+        Self::clear_line()?;
+        annotated_string
+            .into_iter()
+            .try_for_each(|part| -> Result<(), Error> {
+                if let Some(annotation_type) = part.annotation_type {
+                    Self::set_attribute(&annotation_type.into())?;
+                }
+                Self::print(part.string)?;
+                Self::reset_color()?;
+                Ok(())
+            })?;
         Ok(())
     }
     pub fn set_attribute(attribute: &Attribute) -> Result<(), Error> {
