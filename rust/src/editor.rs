@@ -24,6 +24,9 @@ use position::{Col, Position, Row};
 use ui_components::{CommandBar,MessageBar, StatusBar, UIComponent, View};
 use std::io::Error;
 
+pub type GraphemeIdx = usize;
+pub type ByteIdx = usize;
+
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 

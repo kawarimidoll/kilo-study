@@ -1,3 +1,4 @@
+use crate::editor::{ByteIdx, GraphemeIdx};
 use grapheme_width::GraphemeWidth;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::{Deref, Range};
@@ -5,9 +6,6 @@ use unicode_segmentation::UnicodeSegmentation;
 mod grapheme_width;
 mod text_fragment;
 use text_fragment::TextFragment;
-
-pub type GraphemeIdx = usize;
-pub type ByteIdx = usize;
 
 #[derive(Default)]
 pub struct Line {
