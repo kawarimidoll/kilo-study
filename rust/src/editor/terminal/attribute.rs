@@ -1,6 +1,6 @@
 use crossterm::style::Color;
 
-use crate::editor::annotated_string::AnnotationType;
+use super::super::AnnotationType;
 
 pub struct Attribute {
     pub foreground: Option<Color>,

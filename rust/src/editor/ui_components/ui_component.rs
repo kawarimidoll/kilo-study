@@ -1,4 +1,4 @@
-use super::super::Size;
+use crate::prelude::{RowIdx, Size};
 use std::io::Error;
 
 pub trait UIComponent {
@@ -9,7 +9,7 @@ pub trait UIComponent {
     // Sets the size of the component
     fn set_size(&mut self, to: Size);
     // Draws the component
-    fn draw(&mut self, origin_y: usize) -> Result<(), Error>;
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), Error>;
 
     fn resize(&mut self, to: Size) {
         self.set_size(to);
@@ -17,11 +17,11 @@ pub trait UIComponent {
     }
 
     // Renders the component
-    fn render(&mut self, origin_y: usize) {
+    fn render(&mut self, origin_row: RowIdx) {
         if !self.needs_redraw() {
             return;
         }
-        if let Err(err) = self.draw(origin_y) {
+        if let Err(err) = self.draw(origin_row) {
             #[cfg(debug_assertions)]
             panic!("Failed to render component: {err:?}");
             #[cfg(not(debug_assertions))]

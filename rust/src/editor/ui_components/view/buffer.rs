@@ -1,4 +1,5 @@
-use super::{location::Location, Line};
+use super::Line;
+use crate::prelude::Location;
 use std::fs::{read_to_string, File};
 use std::io::{Error, Write};
 

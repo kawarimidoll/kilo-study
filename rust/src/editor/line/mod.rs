@@ -1,4 +1,5 @@
-use crate::editor::{AnnotatedString, AnnotationType, ByteIdx, Col, ColIdx, GraphemeIdx};
+use crate::editor::{AnnotatedString, AnnotationType, GraphemeIdx};
+use crate::prelude::{ByteIdx, ColIdx};
 use grapheme_width::GraphemeWidth;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::{Deref, Range};
@@ -146,14 +147,14 @@ impl Line {
     pub fn grapheme_count(&self) -> GraphemeIdx {
         self.fragments.len()
     }
-    pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> Col {
+    pub fn width_until(&self, grapheme_idx: GraphemeIdx) -> ColIdx {
         self.fragments
             .iter()
             .take(grapheme_idx)
             .map(|fragment| fragment.width.as_usize())
             .sum()
     }
-    pub fn width(&self) -> Col {
+    pub fn width(&self) -> ColIdx {
         self.width_until(self.grapheme_count())
     }
 

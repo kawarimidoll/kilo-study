@@ -1,16 +1,15 @@
+use crate::prelude::*;
 use buffer::Buffer;
 use std::cmp::min;
 use std::io::Error;
 mod buffer;
-mod location;
 use super::super::{
     command::{Edit, Move},
     terminal::Terminal,
-    Col, Line, Position, Row, Size, NAME, VERSION,
+    Line
 };
 use super::ui_component::UIComponent;
 use crate::editor::GraphemeIdx;
-use location::Location;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 mod search_direction;
@@ -164,7 +163,7 @@ impl View {
             row = row.saturating_add(1);
         }
     }
-    fn render_line(row: Row, line_text: &str) {
+    fn render_line(row: RowIdx, line_text: &str) {
         let result = Terminal::print_row(row, line_text);
         debug_assert!(result.is_ok(), "Failed to render line");
     }
@@ -184,7 +183,7 @@ impl View {
         Position { col, row }
     }
 
-    pub fn get_line(&self, row: Row) -> Option<&Line> {
+    pub fn get_line(&self, row: RowIdx) -> Option<&Line> {
         self.buffer.lines.get(row)
     }
 
@@ -204,12 +203,12 @@ impl View {
 
         self.scroll_into_view();
     }
-    fn move_up(&mut self, step: Row) {
+    fn move_up(&mut self, step: RowIdx) {
         self.text_location.line_idx = self.text_location.line_idx.saturating_sub(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
     }
-    fn move_down(&mut self, step: Row) {
+    fn move_down(&mut self, step: RowIdx) {
         self.text_location.line_idx = self.text_location.line_idx.saturating_add(step);
         self.snap_to_valid_x();
         self.snap_to_valid_y();
@@ -265,7 +264,7 @@ impl View {
         self.scroll_horizontally(col);
         self.scroll_vertically(row);
     }
-    fn scroll_horizontally(&mut self, to: Col) {
+    fn scroll_horizontally(&mut self, to: ColIdx) {
         let width = self.size.width;
         if to < self.scroll_offset.col {
             self.scroll_offset.col = to;
@@ -275,7 +274,7 @@ impl View {
             self.needs_redraw = true;
         }
     }
-    fn scroll_vertically(&mut self, to: Row) {
+    fn scroll_vertically(&mut self, to: RowIdx) {
         let height = self.size.height;
         if to < self.scroll_offset.row {
             self.scroll_offset.row = to;
@@ -298,14 +297,14 @@ impl UIComponent for View {
         self.size = to;
         self.scroll_into_view();
     }
-    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), Error> {
         let _ = Terminal::move_caret_to(Position::default());
         let Size { width, height } = self.size;
-        let top = self.scroll_offset.row.saturating_sub(origin_y);
+        let top = self.scroll_offset.row.saturating_sub(origin_row);
         let left = self.scroll_offset.col;
         let right = left.saturating_add(width);
-        let end_y = origin_y.saturating_add(height);
-        for current_row in origin_y..end_y {
+        let end_y = origin_row.saturating_add(height);
+        for current_row in origin_row..end_y {
             let line_idx = current_row.saturating_add(top);
             if let Some(line) = self.get_line(line_idx) {
                 let query = self

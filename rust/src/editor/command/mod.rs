@@ -1,7 +1,7 @@
-use super::Size;
 use crossterm::event::
     Event::{self, Key}
 ;
+use crate::prelude::Size;
 use std::convert::TryFrom;
 mod movecommand;
 mod system;

@@ -1,5 +1,6 @@
-// use super::annotated_string::AnnotatedStringPart;
-use super::{AnnotatedString, Position, Size};
+use crate::prelude::{Position, RowIdx, Size};
+
+use super::AnnotatedString;
 use attribute::Attribute;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{
@@ -89,14 +90,14 @@ impl Terminal {
         Self::queue_command(Print(string))?;
         Ok(())
     }
-    pub fn print_row(row: usize, line_text: &str) -> Result<(), Error> {
+    pub fn print_row(row: RowIdx, line_text: &str) -> Result<(), Error> {
         Self::move_caret_to(Position { col: 0, row })?;
         Self::clear_line()?;
         Self::print(line_text)?;
         Ok(())
     }
     pub fn print_annotated_row(
-        row: usize,
+        row: RowIdx,
         annotated_string: &AnnotatedString,
     ) -> Result<(), Error> {
         Self::move_caret_to(Position { col: 0, row })?;
@@ -126,7 +127,7 @@ impl Terminal {
         Self::queue_command(ResetColor)?;
         Ok(())
     }
-    pub fn print_invert_row(row: usize, line_text: &str) -> Result<(), Error> {
+    pub fn print_invert_row(row: RowIdx, line_text: &str) -> Result<(), Error> {
         let width = Self::size()?.width;
         // :width$ -> pad to width
         // .width$ -> truncate to width

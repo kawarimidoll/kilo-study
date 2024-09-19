@@ -1,5 +1,6 @@
-use super::super::{terminal::Terminal, Size};
+use super::super::terminal::Terminal;
 use super::ui_component::UIComponent;
+use crate::prelude::{RowIdx, Size};
 use std::{
     io::Error,
     time::{Duration, Instant},
@@ -55,7 +56,7 @@ impl UIComponent for MessageBar {
     fn set_size(&mut self, to: Size) {
         self.width = to.width;
     }
-    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), Error> {
         let line_text = if self.message.is_expired() {
             // write blank string to clear the message bar
             //
@@ -64,7 +65,7 @@ impl UIComponent for MessageBar {
         } else {
             &self.message.text
         };
-        let result = Terminal::print_row(origin_y, line_text);
+        let result = Terminal::print_row(origin_row, line_text);
         debug_assert!(result.is_ok(), "Failed to render status_bar");
         Ok(())
     }

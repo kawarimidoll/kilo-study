@@ -1,4 +1,5 @@
 // 日本語🇯🇵の表示テスト
+use crate::prelude::*;
 use crossterm::event::{
     read,
     Event::{self, Key},
@@ -16,24 +17,13 @@ use command::{
     Move::{Down, Left, Right, Up},
     System::{Dismiss, Quit, Resize, Save, Search},
 };
-use size::Size;
-mod position;
-mod size;
 mod ui_components;
 use annotated_string::{AnnotatedString, AnnotationType};
-use position::{Col, Position, Row};
 mod annotated_string;
 use std::io::Error;
 mod line;
 use line::Line;
 use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
-
-pub type GraphemeIdx = usize;
-pub type ByteIdx = usize;
-pub type ColIdx = usize;
-
-const NAME: &str = env!("CARGO_PKG_NAME");
-const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const QUIT_COUNT: u8 = 2;
 

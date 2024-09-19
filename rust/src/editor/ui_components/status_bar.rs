@@ -1,4 +1,6 @@
-use super::super::{terminal::Terminal, Size};
+use crate::prelude::{LineIdx, RowIdx, Size};
+
+use super::super::terminal::Terminal;
 use super::{ui_component::UIComponent, view::View};
 use std::io::Error;
 
@@ -6,7 +8,7 @@ use std::io::Error;
 pub struct DocumentStatus {
     filename: Option<String>,
     total_lines: usize,
-    current_line_idx: usize,
+    current_line_idx: LineIdx,
     modified: bool,
 }
 impl DocumentStatus {
@@ -62,7 +64,7 @@ impl UIComponent for StatusBar {
     fn set_size(&mut self, to: Size) {
         self.width = to.width;
     }
-    fn draw(&mut self, origin_y: usize) -> Result<(), Error> {
+    fn draw(&mut self, origin_row: RowIdx) -> Result<(), Error> {
         let filename_string = self.document_status.filename_string();
         let modified_string = self.document_status.modified_string();
         let total_lines_string = self.document_status.total_lines_string();
@@ -73,7 +75,7 @@ impl UIComponent for StatusBar {
         let reminder_len = self.width.saturating_sub(left.len()).saturating_sub(1);
         let mut line_text = format!("{left} {right:>reminder_len$}");
         line_text.truncate(self.width);
-        let result = Terminal::print_invert_row(origin_y, &line_text);
+        let result = Terminal::print_invert_row(origin_row, &line_text);
         debug_assert!(result.is_ok(), "Failed to render status_bar");
         Ok(())
     }
