@@ -1,5 +1,5 @@
-use super::annotated_string::AnnotatedStringPart;
-use super::{annotated_string, AnnotatedString, Position, Size};
+// use super::annotated_string::AnnotatedStringPart;
+use super::{AnnotatedString, Position, Size};
 use attribute::Attribute;
 use crossterm::cursor::{Hide, MoveTo, Show};
 use crossterm::style::{

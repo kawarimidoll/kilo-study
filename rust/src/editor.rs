@@ -28,6 +28,7 @@ use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 pub type GraphemeIdx = usize;
 pub type ByteIdx = usize;
+pub type ColIdx = usize;
 
 const NAME: &str = env!("CARGO_PKG_NAME");
 const VERSION: &str = env!("CARGO_PKG_VERSION");

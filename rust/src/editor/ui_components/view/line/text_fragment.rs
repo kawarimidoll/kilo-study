@@ -2,7 +2,7 @@ use super::GraphemeWidth;
 use crate::editor::ByteIdx;
 use unicode_width::UnicodeWidthStr;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TextFragment {
     pub grapheme: String,
     pub width: GraphemeWidth,
