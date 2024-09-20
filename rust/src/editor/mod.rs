@@ -18,8 +18,12 @@ use command::{
     System::{Dismiss, Quit, Resize, Save, Search},
 };
 mod ui_components;
-use annotated_string::{AnnotatedString, AnnotationType};
+use annotated_string::AnnotatedString;
 mod annotated_string;
+mod annotation;
+use annotation::Annotation;
+pub use annotation_type::AnnotationType;
+pub mod annotation_type;
 use std::io::Error;
 mod line;
 use line::Line;

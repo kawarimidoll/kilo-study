@@ -1,5 +1,5 @@
-use crate::prelude::LineIdx;
 use crate::editor::file_info::FileType;
+use crate::prelude::LineIdx;
 
 #[derive(Default, Eq, PartialEq)]
 pub struct DocumentStatus {

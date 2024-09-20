@@ -6,10 +6,7 @@ use annotated_string_iterator::AnnotatedStringIterator;
 use annotated_string_part::AnnotatedStringPart;
 mod annotated_string_iterator;
 mod annotated_string_part;
-use annotation::Annotation;
-mod annotation;
-pub use annotation_type::AnnotationType;
-pub mod annotation_type;
+use super::{Annotation, AnnotationType};
 
 #[derive(Default, Debug)]
 pub struct AnnotatedString {
