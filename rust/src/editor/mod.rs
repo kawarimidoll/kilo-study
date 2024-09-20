@@ -23,6 +23,8 @@ mod annotated_string;
 use std::io::Error;
 mod line;
 use line::Line;
+mod hex_color;
+use hex_color::HexColor;
 mod document_status;
 use document_status::DocumentStatus;
 use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
