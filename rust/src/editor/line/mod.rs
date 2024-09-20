@@ -100,7 +100,7 @@ impl Line {
                 continue;
             } else if fragment_start == range.end {
                 // truncate right if we have reached the end of the visible range
-                result.replace(fragment.start_byte_idx, self.string.len(), "");
+                result.truncate_right_from(fragment.start_byte_idx);
                 continue;
             }
 
@@ -109,12 +109,10 @@ impl Line {
             if fragment_end <= range.start {
                 // fragment ends at the start of the range:
                 // remove the entire left side of the string
-                result.replace(
-                    0,
+                result.truncate_left_until(
                     fragment
                         .start_byte_idx
                         .saturating_add(fragment.grapheme.len()),
-                    "",
                 );
                 // end process since all remaining fragments will be invisible
                 break;
