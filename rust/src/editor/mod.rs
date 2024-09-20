@@ -23,6 +23,8 @@ mod annotated_string;
 use std::io::Error;
 mod line;
 use line::Line;
+mod document_status;
+use document_status::DocumentStatus;
 use ui_components::{CommandBar, MessageBar, StatusBar, UIComponent, View};
 
 const QUIT_COUNT: u8 = 2;

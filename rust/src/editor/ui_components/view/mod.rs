@@ -8,7 +8,7 @@ use super::super::{
     terminal::Terminal,
     Line,
 };
-use super::ui_component::UIComponent;
+use super::UIComponent;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 mod search_direction;

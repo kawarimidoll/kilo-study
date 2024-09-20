@@ -1,36 +1,8 @@
-use crate::prelude::{LineIdx, RowIdx, Size};
+use crate::prelude::{RowIdx, Size};
 
-use super::super::terminal::Terminal;
-use super::{ui_component::UIComponent, view::View};
+use super::super::{DocumentStatus, Terminal};
+use super::{UIComponent, View};
 use std::io::Error;
-
-#[derive(Default, Eq, PartialEq)]
-pub struct DocumentStatus {
-    filename: Option<String>,
-    total_lines: usize,
-    current_line_idx: LineIdx,
-    modified: bool,
-}
-impl DocumentStatus {
-    pub fn filename_string(&self) -> String {
-        self.filename
-            .clone()
-            .unwrap_or_else(|| String::from("[No Name]"))
-    }
-    pub fn modified_string(&self) -> String {
-        if self.modified {
-            String::from("(modified)")
-        } else {
-            String::default()
-        }
-    }
-    pub fn total_lines_string(&self) -> String {
-        format!("{} lines", self.total_lines)
-    }
-    pub fn position_string(&self) -> String {
-        format!("{}/{}", self.current_line_idx, self.total_lines)
-    }
-}
 
 #[derive(Default)]
 pub struct StatusBar {

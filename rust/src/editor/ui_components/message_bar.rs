@@ -1,5 +1,5 @@
 use super::super::terminal::Terminal;
-use super::ui_component::UIComponent;
+use super::UIComponent;
 use crate::prelude::{RowIdx, Size};
 use std::{
     io::Error,

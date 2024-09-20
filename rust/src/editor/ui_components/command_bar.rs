@@ -1,5 +1,5 @@
-use super::super::{command::Edit, terminal::Terminal};
-use super::ui_component::UIComponent;
+use super::super::{command::Edit, Terminal};
+use super::UIComponent;
 use crate::prelude::{ColIdx, RowIdx, Size};
 use std::cmp::min;
 use std::io::Error;
