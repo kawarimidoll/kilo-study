@@ -1,8 +1,10 @@
 use crate::prelude::LineIdx;
+use crate::editor::file_info::FileType;
 
 #[derive(Default, Eq, PartialEq)]
 pub struct DocumentStatus {
     pub filename: Option<String>,
+    pub file_type: Option<FileType>,
     pub total_lines: usize,
     pub current_line_idx: LineIdx,
     pub modified: bool,
