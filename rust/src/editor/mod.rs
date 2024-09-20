@@ -76,7 +76,7 @@ impl Editor {
             let message = if editor.view.load(first).is_err() {
                 &format!("Could not open file: {first}")
             } else {
-                "HELP: Ctrl-F = find | Ctrl-S = save | Ctrl-Q = quit"
+                "HELP: Ctrl-G = find | Ctrl-S = save | Ctrl-Q = quit"
             };
 
             editor.message_bar.update_message(message);
