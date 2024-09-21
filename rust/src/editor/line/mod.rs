@@ -1,4 +1,4 @@
-use crate::editor::{AnnotatedString, AnnotationType};
+use crate::editor::{AnnotatedString, Annotation};
 use crate::prelude::{ByteIdx, ColIdx, GraphemeIdx};
 use grapheme_width::GraphemeWidth;
 use std::cmp::min;
@@ -12,7 +12,7 @@ use text_fragment::TextFragment;
 #[derive(Default, Clone)]
 pub struct Line {
     fragments: Vec<TextFragment>,
-    string: String,
+    pub string: String,
 }
 
 impl Line {
@@ -34,8 +34,7 @@ impl Line {
     }
     #[allow(dead_code)]
     pub fn get_visible_graphemes(&self, range: Range<ColIdx>) -> String {
-        self.get_annotated_visible_substr(range, None, None)
-            .to_string()
+        self.get_annotated_visible_substr(range, None).to_string()
     }
     /// Get the annotated string in the given column index.
     /// Note that the column index is the same as the grapheme index.
@@ -48,41 +47,19 @@ impl Line {
     pub fn get_annotated_visible_substr(
         &self,
         range: Range<ColIdx>,
-        query: Option<&str>,
-        selected_match: Option<GraphemeIdx>,
+        annotations: Option<&Vec<Annotation>>,
     ) -> AnnotatedString {
         if range.start >= range.end {
             return AnnotatedString::default();
         }
         let mut result = AnnotatedString::from(&self.string);
 
-        self.string.chars().enumerate().for_each(|(idx, ch)| {
-            if ch.is_ascii_digit() {
-                result.push(AnnotationType::Digit, idx, idx.saturating_add(1));
-            }
-        });
-
-        if let Some(query) = query {
-            if !query.is_empty() {
-                self.find_all(query, 0..self.string.len()).iter().for_each(
-                    |(start_byte_idx, grapheme_idx)| {
-                        if let Some(selected_match) = selected_match {
-                            if *grapheme_idx == selected_match {
-                                result.push(
-                                    AnnotationType::SelectedMatch,
-                                    *start_byte_idx,
-                                    start_byte_idx.saturating_add(query.len()),
-                                );
-                                return;
-                            }
-                        }
-                        result.push(
-                            AnnotationType::Match,
-                            *start_byte_idx,
-                            start_byte_idx.saturating_add(query.len()),
-                        );
-                    },
-                );
+        if let Some(annotations) = annotations {
+            for annotation in annotations {
+                let start_byte_idx = annotation.start_byte_idx;
+                let end_byte_idx = annotation.end_byte_idx;
+                let annotation_type = annotation.annotation_type;
+                result.push(annotation_type, start_byte_idx, end_byte_idx);
             }
         }
 
@@ -254,7 +231,7 @@ impl Line {
             .last()
             .map(|(_, grapheme_idx)| *grapheme_idx)
     }
-    fn find_all(&self, query: &str, range: Range<ByteIdx>) -> Vec<(ByteIdx, GraphemeIdx)> {
+    pub fn find_all(&self, query: &str, range: Range<ByteIdx>) -> Vec<(ByteIdx, GraphemeIdx)> {
         let start_byte_idx = range.start;
         let end_byte_idx = min(range.end, self.string.len());
         debug_assert!(start_byte_idx <= end_byte_idx);

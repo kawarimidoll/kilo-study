@@ -12,6 +12,8 @@ use super::UIComponent;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 mod search_direction;
+use highlighter::Highlighter;
+mod highlighter;
 mod search_info;
 
 const FILLCHAR_EOB: &str = "~";
@@ -303,20 +305,24 @@ impl UIComponent for View {
         let left = self.scroll_offset.col;
         let right = left.saturating_add(width);
         let end_y = origin_row.saturating_add(height);
+        let query = self
+            .search_info
+            .as_ref()
+            .and_then(|search_info| search_info.query.as_deref());
+        let selected_match = query.is_some().then_some(self.text_location);
+        let mut highlighter = Highlighter::new(query, selected_match);
+        // highlight from the top to the end of the visible area,
+        // to ensure all annotations are up to date
+        for current_row in 0..end_y {
+            self.buffer.highlight(current_row, &mut highlighter);
+        }
         for current_row in origin_row..end_y {
             let line_idx = current_row.saturating_add(top);
-            if let Some(line) = self.get_line(line_idx) {
-                let query = self
-                    .search_info
-                    .as_ref()
-                    .and_then(|search_info| search_info.query.as_deref());
-                let selected_match: Option<GraphemeIdx> = (self.text_location.line_idx == line_idx
-                    && query.is_some())
-                .then_some(self.text_location.grapheme_idx);
-                Terminal::print_annotated_row(
-                    current_row,
-                    &line.get_annotated_visible_substr(left..right, query, selected_match),
-                )?;
+            if let Some(annotated_string) =
+                self.buffer
+                    .get_highlighted_substring(line_idx, left..right, &highlighter)
+            {
+                Terminal::print_annotated_row(current_row, &annotated_string)?;
             } else {
                 Self::render_line(current_row, FILLCHAR_EOB);
             }

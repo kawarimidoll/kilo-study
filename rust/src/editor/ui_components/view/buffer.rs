@@ -1,7 +1,9 @@
-use super::Line;
-use crate::prelude::Location;
+use super::{GraphemeIdx, Highlighter, Line};
+use crate::editor::annotated_string::AnnotatedString;
+use crate::prelude::{LineIdx, Location};
 use std::fs::{read_to_string, File};
 use std::io::{Error, Write};
+use std::ops::Range;
 
 use crate::editor::file_info::FileInfo;
 
@@ -18,6 +20,22 @@ impl Buffer {
     }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
+    }
+
+    pub fn get_highlighted_substring(
+        &self,
+        line_idx: LineIdx,
+        range: Range<GraphemeIdx>,
+        highlighter: &Highlighter,
+    ) -> Option<AnnotatedString> {
+        self.lines.get(line_idx).map(|line| {
+            line.get_annotated_visible_substr(range, highlighter.get_annotations(line_idx))
+        })
+    }
+    pub fn highlight(&self, line_idx: LineIdx, highlighter: &mut Highlighter) {
+        if let Some(line) = self.lines.get(line_idx) {
+            highlighter.highlight(line_idx, line);
+        }
     }
     pub fn insert_newline(&mut self, at: Location) -> bool {
         let Location {
