@@ -43,8 +43,8 @@ impl UIComponent for StatusBar {
         let total_lines_string = self.document_status.total_lines_string();
         let position_string = self.document_status.position_string();
         let file_type_string = self.document_status.file_type.as_ref().map_or_else(
-            || String::default(),
-            |file_type| format!("{:?} | ", file_type),
+            String::default,
+            |file_type| format!("{file_type:?} | " ),
         );
 
         let left = format!("{filename_string}{modified_string} - {total_lines_string}");

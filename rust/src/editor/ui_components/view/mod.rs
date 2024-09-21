@@ -183,9 +183,9 @@ impl View {
         Position { col, row }
     }
 
-    pub fn get_line(&self, row: RowIdx) -> Option<&Line> {
-        self.buffer.lines.get(row)
-    }
+    // pub fn get_line(&self, row: RowIdx) -> Option<&Line> {
+    //     self.buffer.lines.get(row)
+    // }
 
     pub fn handle_move_command(&mut self, move_command: Move) {
         // This match moves the position, but does not check for all boundaries.
