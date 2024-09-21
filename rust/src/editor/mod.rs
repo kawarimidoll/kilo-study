@@ -27,6 +27,8 @@ pub mod annotation_type;
 use std::io::Error;
 mod line;
 use line::Line;
+mod file_type;
+use file_type::FileType;
 mod hex_color;
 use hex_color::HexColor;
 mod document_status;

@@ -1,23 +1,25 @@
+use super::{file_type, FileType};
 use std::{
     fmt,
     path::{Path, PathBuf},
 };
 
-#[derive(Eq, PartialEq, Debug)]
-pub enum FileType {
-    PlainText,
-    Rust,
-}
-
 #[derive(Default, Debug)]
 pub struct FileInfo {
     path: Option<PathBuf>,
+    file_type: Option<FileType>,
 }
 
 impl FileInfo {
     pub fn from(filename: &str) -> Self {
         let path = Some(PathBuf::from(filename));
-        Self { path }
+
+        let file_type = path
+            .as_ref()
+            .and_then(|path| path.extension())
+            .and_then(|ext| ext.to_str())
+            .and_then(|ext| FileType::from(ext));
+        Self { path, file_type }
     }
     pub fn get_path(&self) -> Option<&Path> {
         self.path.as_deref()
@@ -32,15 +34,7 @@ impl FileInfo {
             .and_then(|ext| ext.to_str())
     }
     pub fn get_file_type(&self) -> Option<FileType> {
-        if let Some(ext) = self.extension() {
-            match ext {
-                "txt" => Some(FileType::PlainText),
-                "rs" => Some(FileType::Rust),
-                _ => None,
-            }
-        } else {
-            None
-        }
+        self.file_type
     }
 }
 
@@ -63,7 +57,7 @@ mod tests {
     fn test_get_file_type() {
         assert_eq!(
             FileInfo::from("sample.txt").get_file_type().unwrap(),
-            FileType::PlainText
+            FileType::Text
         );
         assert_eq!(
             FileInfo::from("sample.rs").get_file_type().unwrap(),

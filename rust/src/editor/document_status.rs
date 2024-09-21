@@ -1,4 +1,4 @@
-use crate::editor::file_info::FileType;
+use super::FileType;
 use crate::prelude::LineIdx;
 
 #[derive(Default, Eq, PartialEq)]
