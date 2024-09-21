@@ -176,11 +176,10 @@ impl View {
     pub fn text_location_to_position(&self) -> Position {
         let row = self.text_location.line_idx;
         debug_assert!(row < self.buffer.height().saturating_add(1));
+
         let col = self
             .buffer
-            .lines
-            .get(row)
-            .map_or(0, |line| line.width_until(self.text_location.grapheme_idx));
+            .width_until(row, self.text_location.grapheme_idx);
         Position { col, row }
     }
 
@@ -223,9 +222,7 @@ impl View {
         }
     }
     fn move_right(&mut self) {
-        let line_len = self
-            .get_line(self.text_location.line_idx)
-            .map_or(0, Line::grapheme_count);
+        let line_len = self.buffer.grapheme_count(self.text_location.line_idx);
         if self.text_location.grapheme_idx == line_len {
             self.move_to_start_of_line();
             self.move_down(1);
@@ -237,15 +234,12 @@ impl View {
         self.text_location.grapheme_idx = 0;
     }
     fn move_to_end_of_line(&mut self) {
-        self.text_location.grapheme_idx = self
-            .get_line(self.text_location.line_idx)
-            .map_or(0, Line::grapheme_count);
+        self.text_location.grapheme_idx = self.buffer.grapheme_count(self.text_location.line_idx);
     }
     fn snap_to_valid_x(&mut self) {
         self.text_location.grapheme_idx = min(
             self.text_location.grapheme_idx,
-            self.get_line(self.text_location.line_idx)
-                .map_or(0, Line::grapheme_count),
+            self.buffer.grapheme_count(self.text_location.line_idx),
         );
     }
     fn snap_to_valid_y(&mut self) {

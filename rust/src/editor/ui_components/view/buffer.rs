@@ -15,11 +15,19 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn height(&self) -> usize {
+    pub fn height(&self) -> LineIdx {
         self.lines.len()
     }
     pub fn is_empty(&self) -> bool {
         self.lines.is_empty()
+    }
+    pub fn grapheme_count(&self, line_idx: LineIdx) -> GraphemeIdx {
+        self.lines.get(line_idx).map_or(0, Line::grapheme_count)
+    }
+    pub fn width_until(&self, line_idx: LineIdx, until: GraphemeIdx) -> GraphemeIdx {
+        self.lines
+            .get(line_idx)
+            .map_or(0, |line| line.width_until(until))
     }
 
     pub fn get_highlighted_substring(
