@@ -305,11 +305,7 @@ impl UIComponent for View {
             .as_ref()
             .and_then(|search_info| search_info.query.as_deref());
         let selected_match = query.is_some().then_some(self.text_location);
-        let file_type = if let Some(file_type) = self.buffer.file_info.get_file_type() {
-            file_type
-        } else {
-            FileType::default()
-        };
+        let file_type = self.buffer.file_info.get_file_type().unwrap_or_default();
         let mut highlighter = Highlighter::new(query, selected_match, file_type);
         // highlight from the top to the end of the visible area,
         // to ensure all annotations are up to date

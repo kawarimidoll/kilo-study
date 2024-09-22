@@ -18,7 +18,7 @@ impl FileInfo {
             .as_ref()
             .and_then(|path| path.extension())
             .and_then(|ext| ext.to_str())
-            .and_then(|ext| FileType::from(ext));
+            .and_then(FileType::from);
         Self { path, file_type }
     }
     pub fn get_path(&self) -> Option<&Path> {
