@@ -39,10 +39,14 @@ impl View {
         }
     }
     pub fn save(&mut self) -> Result<(), Error> {
-        self.buffer.save()
+        let result = self.buffer.save();
+        self.set_needs_redraw(true);
+        result
     }
     pub fn save_as(&mut self, filename: &str) -> Result<(), Error> {
-        self.buffer.save_as(filename)
+        let result = self.buffer.save_as(filename);
+        self.set_needs_redraw(true);
+        result
     }
     pub fn insert(&mut self, c: char) {
         if self.buffer.insert_char(c, self.text_location) {
