@@ -6,6 +6,8 @@ mod rust_syntax_highlighter;
 mod search_result_highlighter;
 use syntax_highlighter::SyntaxHighlighter;
 mod syntax_highlighter;
+use is_number_string::is_number_string;
+mod is_number_string;
 
 fn create_syntax_highlighter(file_type: FileType) -> Option<Box<dyn SyntaxHighlighter>> {
     match file_type {
