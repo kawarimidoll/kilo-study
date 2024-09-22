@@ -18,7 +18,7 @@ impl From<AnnotationType> for Attribute {
                 foreground: Some(Color::White),
                 background: Some(HexColor::from("#FFFF99").unwrap().to_color()),
             },
-            AnnotationType::Digit => Attribute {
+            AnnotationType::Number => Attribute {
                 foreground: Some(HexColor::from("#BC7A21").unwrap().to_color()),
                 background: None,
             },

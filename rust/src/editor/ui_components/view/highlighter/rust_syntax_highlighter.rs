@@ -13,7 +13,7 @@ impl RustSyntaxHighlighter {
         line.chars().enumerate().for_each(|(idx, ch)| {
             if ch.is_ascii_digit() {
                 result.push(Annotation {
-                    annotation_type: AnnotationType::Digit,
+                    annotation_type: AnnotationType::Number,
                     start_byte_idx: idx,
                     end_byte_idx: idx.saturating_add(1),
                 });
