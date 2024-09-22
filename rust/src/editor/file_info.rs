@@ -1,4 +1,4 @@
-use super::{file_type, FileType};
+use super::FileType;
 use std::{
     fmt,
     path::{Path, PathBuf},

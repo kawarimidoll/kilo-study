@@ -3,12 +3,13 @@ use buffer::Buffer;
 use std::cmp::min;
 use std::io::Error;
 mod buffer;
-use super::super::{
+use super::UIComponent;
+use crate::editor::{
     command::{Edit, Move},
+    file_type::FileType,
     terminal::Terminal,
     Line,
 };
-use super::UIComponent;
 use search_direction::SearchDirection;
 use search_info::SearchInfo;
 mod search_direction;
@@ -304,10 +305,15 @@ impl UIComponent for View {
             .as_ref()
             .and_then(|search_info| search_info.query.as_deref());
         let selected_match = query.is_some().then_some(self.text_location);
-        let mut highlighter = Highlighter::new(query, selected_match);
+        let file_type = if let Some(file_type) = self.buffer.file_info.get_file_type() {
+            file_type
+        } else {
+            FileType::default()
+        };
+        let mut highlighter = Highlighter::new(query, selected_match, file_type);
         // highlight from the top to the end of the visible area,
         // to ensure all annotations are up to date
-        for current_row in 0..end_y {
+        for current_row in 0..end_y.saturating_add(top) {
             self.buffer.highlight(current_row, &mut highlighter);
         }
         for current_row in origin_row..end_y {
