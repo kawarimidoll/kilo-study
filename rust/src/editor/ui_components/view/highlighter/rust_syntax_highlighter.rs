@@ -15,27 +15,19 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
         let mut result = Vec::new();
         for (start_byte_idx, word) in line.split_word_bound_indices() {
             let end_byte_idx = start_byte_idx.saturating_add(word.len());
+            let mut annotation_type = None;
             if KEYWORDS.contains(&word) {
-                result.push(Annotation {
-                    annotation_type: AnnotationType::Keyword,
-                    start_byte_idx,
-                    end_byte_idx,
-                });
+                annotation_type = Some(AnnotationType::Keyword);
             } else if TYPES.contains(&word) {
-                result.push(Annotation {
-                    annotation_type: AnnotationType::Type,
-                    start_byte_idx,
-                    end_byte_idx,
-                });
+                annotation_type = Some(AnnotationType::Type);
             } else if CONSTANTS.contains(&word) {
-                result.push(Annotation {
-                    annotation_type: AnnotationType::Constant,
-                    start_byte_idx,
-                    end_byte_idx,
-                });
+                annotation_type = Some(AnnotationType::Constant);
             } else if is_number_string(word) {
+                annotation_type = Some(AnnotationType::Number);
+            }
+            if let Some(annotation_type) = annotation_type {
                 result.push(Annotation {
-                    annotation_type: AnnotationType::Number,
+                    annotation_type,
                     start_byte_idx,
                     end_byte_idx,
                 });
