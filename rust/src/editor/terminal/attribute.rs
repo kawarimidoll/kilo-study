@@ -22,6 +22,18 @@ impl From<AnnotationType> for Attribute {
                 foreground: Some(HexColor::from("#BC7A21").unwrap().to_color()),
                 background: None,
             },
+            AnnotationType::Keyword => Attribute {
+                foreground: Some(HexColor::from("#2393D3").unwrap().to_color()),
+                background: None,
+            },
+            AnnotationType::Constant => Attribute {
+                foreground: Some(HexColor::from("#23D323").unwrap().to_color()),
+                background: None,
+            },
+            AnnotationType::Type => Attribute {
+                foreground: Some(HexColor::from("#9323D3").unwrap().to_color()),
+                background: None,
+            },
         }
     }
 }
