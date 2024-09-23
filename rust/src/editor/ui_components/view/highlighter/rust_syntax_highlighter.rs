@@ -8,6 +8,7 @@ use unicode_segmentation::UnicodeSegmentation;
 pub struct RustSyntaxHighlighter {
     highlights: Vec<Vec<Annotation>>,
     ml_comment_balance: usize,
+    in_string: bool,
 }
 
 impl RustSyntaxHighlighter {
@@ -45,6 +46,41 @@ impl RustSyntaxHighlighter {
             end_byte_idx: string.len(),
         })
     }
+    fn annotate_string(&mut self, string: &str) -> Option<Annotation> {
+        let mut chars = string.char_indices();
+        while let Some((idx, c)) = chars.next() {
+            if c == '\\' {
+                // skip escaped character
+                chars.next();
+                continue;
+            }
+            // handle potential string start / end
+            if c == '"' {
+                if self.in_string {
+                    // end of string
+                    self.in_string = false;
+                    return Some(Annotation {
+                        annotation_type: AnnotationType::String,
+                        start_byte_idx: 0,
+                        end_byte_idx: idx.saturating_add(1),
+                    });
+                }
+                // start of string
+                self.in_string = true;
+            }
+            if !self.in_string {
+                return None;
+            }
+        }
+        // if still not exit at this point,
+        // we might be in a multi-line string
+        // then annotate the entire lines as a string
+        self.in_string.then_some(Annotation {
+            annotation_type: AnnotationType::String,
+            start_byte_idx: 0,
+            end_byte_idx: string.len(),
+        })
+    }
 }
 impl SyntaxHighlighter for RustSyntaxHighlighter {
     fn highlight(&mut self, line_idx: LineIdx, line: &Line) {
@@ -55,6 +91,7 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
             let remainder = &line[start_byte_idx..];
             if let Some(mut annotation) = self
                 .annotate_ml_comment(remainder)
+                .or_else(|| self.annotate_string(remainder))
                 .or_else(|| annotate_single_line_comment(remainder))
                 .or_else(|| annotate_char(remainder))
                 .or_else(|| annotate_lifetime_specifier(remainder))
