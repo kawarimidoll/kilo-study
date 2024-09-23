@@ -3,7 +3,6 @@ use crate::prelude::*;
 use crossterm::event::{
     read,
     Event::{self, Key},
-    // Backspace, Delete, Enter,
     KeyEvent,
     KeyEventKind,
 };
