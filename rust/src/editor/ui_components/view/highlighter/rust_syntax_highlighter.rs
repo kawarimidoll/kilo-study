@@ -17,6 +17,7 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
         while let Some((start_byte_idx, _)) = iterator.next() {
             let remainder = &line[start_byte_idx..];
             if let Some(mut annotation) = annotate_char(remainder)
+                .or_else(|| annotate_lifetime_specifier(remainder))
                 .or_else(|| annotate_keyword(remainder))
                 .or_else(|| annotate_type(remainder))
                 .or_else(|| annotate_constant(remainder))
@@ -93,6 +94,21 @@ fn annotate_char(string: &str) -> Option<Annotation> {
                 annotation_type: AnnotationType::Char,
                 start_byte_idx: 0,
                 end_byte_idx,
+            });
+        }
+    }
+    None
+}
+fn annotate_lifetime_specifier(string: &str) -> Option<Annotation> {
+    // like: 'a, '_, '123
+    let mut iter = string.split_word_bound_indices();
+    // handle start quote
+    if let Some((_, "\'")) = iter.next() {
+        if let Some((idx, next_word)) = iter.next() {
+            return Some(Annotation {
+                annotation_type: AnnotationType::LifetimeSpecifier,
+                start_byte_idx: 0,
+                end_byte_idx: idx.saturating_add(next_word.len()),
             });
         }
     }
