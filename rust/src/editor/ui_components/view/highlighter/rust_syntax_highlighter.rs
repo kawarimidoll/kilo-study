@@ -2,21 +2,60 @@ use super::is_number_string;
 use super::SyntaxHighlighter;
 use crate::editor::{Annotation, AnnotationType, Line};
 use crate::prelude::LineIdx;
-use std::collections::HashMap;
 use unicode_segmentation::UnicodeSegmentation;
 
 #[derive(Default)]
 pub struct RustSyntaxHighlighter {
-    highlights: HashMap<LineIdx, Vec<Annotation>>,
+    highlights: Vec<Vec<Annotation>>,
+    ml_comment_balance: usize,
 }
 
+impl RustSyntaxHighlighter {
+    fn annotate_ml_comment(&mut self, string: &str) -> Option<Annotation> {
+        let mut chars = string.char_indices().peekable();
+        while let Some((_, c)) = chars.next() {
+            // handle potential comment start
+            if c == '/' {
+                if let Some((_, '*')) = chars.peek() {
+                    self.ml_comment_balance = self.ml_comment_balance.saturating_add(1);
+                    chars.next();
+                }
+            } else if self.ml_comment_balance == 0 {
+                return None;
+            } else if c == '*' {
+                if let Some((idx, '/')) = chars.peek() {
+                    self.ml_comment_balance = self.ml_comment_balance.saturating_sub(1);
+                    if self.ml_comment_balance == 0 {
+                        return Some(Annotation {
+                            annotation_type: AnnotationType::Comment,
+                            start_byte_idx: 0,
+                            end_byte_idx: idx.saturating_add(1),
+                        });
+                    }
+                    chars.next();
+                }
+            }
+        }
+        // if still not exit at this point,
+        // we might be in a multi-line comment
+        // then annotate the entire lines as a comment
+        (self.ml_comment_balance > 0).then_some(Annotation {
+            annotation_type: AnnotationType::Comment,
+            start_byte_idx: 0,
+            end_byte_idx: string.len(),
+        })
+    }
+}
 impl SyntaxHighlighter for RustSyntaxHighlighter {
     fn highlight(&mut self, line_idx: LineIdx, line: &Line) {
+        debug_assert_eq!(line_idx, self.highlights.len());
         let mut result = Vec::new();
         let mut iterator = line.split_word_bound_indices().peekable();
         while let Some((start_byte_idx, _)) = iterator.next() {
             let remainder = &line[start_byte_idx..];
-            if let Some(mut annotation) = annotate_single_line_comment(remainder)
+            if let Some(mut annotation) = self
+                .annotate_ml_comment(remainder)
+                .or_else(|| annotate_single_line_comment(remainder))
                 .or_else(|| annotate_char(remainder))
                 .or_else(|| annotate_lifetime_specifier(remainder))
                 .or_else(|| annotate_keyword(remainder))
@@ -34,10 +73,10 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
                 }
             }
         }
-        self.highlights.insert(line_idx, result);
+        self.highlights.push(result);
     }
     fn get_annotations(&self, line_idx: LineIdx) -> Option<&Vec<Annotation>> {
-        self.highlights.get(&line_idx)
+        self.highlights.get(line_idx)
     }
 }
 
