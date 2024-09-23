@@ -12,7 +12,7 @@ mod is_number_string;
 fn create_syntax_highlighter(file_type: FileType) -> Option<Box<dyn SyntaxHighlighter>> {
     match file_type {
         FileType::Rust => Some(Box::<RustSyntaxHighlighter>::default()),
-        _ => None,
+        FileType::Text => None,
     }
 }
 

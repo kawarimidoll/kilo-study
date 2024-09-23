@@ -9,7 +9,7 @@ pub fn is_number_string(word: &str) -> bool {
         // consume the first two characters
         let _ = chars.next();
         let _ = chars.next();
-        return chars.all(|c| c.is_digit(16));
+        return chars.all(|c| c.is_ascii_hexdigit());
     } else if word.starts_with("0b") || word.starts_with("0B") {
         // consume the first two characters
         let _ = chars.next();
