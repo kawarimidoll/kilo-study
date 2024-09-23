@@ -81,12 +81,34 @@ impl RustSyntaxHighlighter {
             end_byte_idx: string.len(),
         })
     }
+    fn initial_annotation(&mut self, line: &Line) -> Option<Annotation> {
+        // select the first annotation in the line
+        if self.in_string {
+            self.annotate_string(line)
+        } else if self.ml_comment_balance > 0 {
+            self.annotate_ml_comment(line)
+        } else {
+            None
+        }
+    }
 }
 impl SyntaxHighlighter for RustSyntaxHighlighter {
     fn highlight(&mut self, line_idx: LineIdx, line: &Line) {
         debug_assert_eq!(line_idx, self.highlights.len());
         let mut result = Vec::new();
         let mut iterator = line.split_word_bound_indices().peekable();
+        // handle dangling multi-line annotations
+        if let Some(annotation) = self.initial_annotation(line) {
+            // no need to shift here because idx is 0
+            result.push(annotation);
+            // skip over any subsequent word which has already been annotated
+            while let Some(&(next_byte_idx, _)) = iterator.peek() {
+                if next_byte_idx >= annotation.end_byte_idx {
+                    break;
+                }
+                iterator.next();
+            }
+        }
         while let Some((start_byte_idx, _)) = iterator.next() {
             let remainder = &line[start_byte_idx..];
             if let Some(mut annotation) = self
