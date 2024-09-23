@@ -27,12 +27,6 @@ impl FileInfo {
     pub fn has_path(&self) -> bool {
         self.path.is_some()
     }
-    pub fn extension(&self) -> Option<&str> {
-        self.path
-            .as_ref()
-            .and_then(|path| path.extension())
-            .and_then(|ext| ext.to_str())
-    }
     pub fn get_file_type(&self) -> Option<FileType> {
         self.file_type
     }
@@ -64,11 +58,5 @@ mod tests {
             FileType::Rust
         );
         assert_eq!(FileInfo::from("sample.unknown").get_file_type(), None);
-    }
-    #[test]
-    fn test_extension() {
-        assert_eq!(FileInfo::from("sample.txt").extension().unwrap(), "txt");
-        assert_eq!(FileInfo::from("sample.rs").extension().unwrap(), "rs");
-        assert_eq!(FileInfo::from("no_ext").extension(), None);
     }
 }

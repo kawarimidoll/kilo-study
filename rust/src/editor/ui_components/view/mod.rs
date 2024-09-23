@@ -6,7 +6,6 @@ mod buffer;
 use super::UIComponent;
 use crate::editor::{
     command::{Edit, Move},
-    file_type::FileType,
     terminal::Terminal,
     Line,
 };
