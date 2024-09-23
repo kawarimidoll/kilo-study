@@ -6,4 +6,5 @@ pub enum AnnotationType {
     Keyword,
     Constant,
     Type,
+    Char,
 }

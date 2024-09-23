@@ -34,6 +34,10 @@ impl From<AnnotationType> for Attribute {
                 foreground: Some(HexColor::from("#9323D3").unwrap().to_color()),
                 background: None,
             },
+            AnnotationType::Char => Attribute {
+                foreground: Some(HexColor::from("#FFb900").unwrap().to_color()),
+                background: None,
+            },
         }
     }
 }

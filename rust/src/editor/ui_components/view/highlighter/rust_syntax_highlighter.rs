@@ -16,7 +16,8 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
         let mut iterator = line.split_word_bound_indices().peekable();
         while let Some((start_byte_idx, _)) = iterator.next() {
             let remainder = &line[start_byte_idx..];
-            if let Some(mut annotation) = annotate_keyword(remainder)
+            if let Some(mut annotation) = annotate_char(remainder)
+                .or_else(|| annotate_keyword(remainder))
                 .or_else(|| annotate_type(remainder))
                 .or_else(|| annotate_constant(remainder))
                 .or_else(|| annotate_number(remainder))
@@ -73,6 +74,29 @@ fn annotate_constant(string: &str) -> Option<Annotation> {
     annotate_next_word(string, AnnotationType::Constant, |word| {
         CONSTANTS.contains(&word)
     })
+}
+fn annotate_char(string: &str) -> Option<Annotation> {
+    // like: 'a', '\n', '\'', '\\', 'single_word'
+    let mut iter = string.split_word_bound_indices().peekable();
+    // handle opening quote
+    if let Some((_, "\'")) = iter.next() {
+        if let Some((_, "\\")) = iter.peek() {
+            // skip escape character
+            iter.next();
+        }
+        // skip character
+        iter.next();
+        if let Some((idx, "\'")) = iter.next() {
+            // include closing quote
+            let end_byte_idx = idx.saturating_add(1);
+            return Some(Annotation {
+                annotation_type: AnnotationType::Char,
+                start_byte_idx: 0,
+                end_byte_idx,
+            });
+        }
+    }
+    None
 }
 
 const TYPES: [&str; 22] = [
