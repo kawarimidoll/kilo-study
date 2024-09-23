@@ -16,7 +16,8 @@ impl SyntaxHighlighter for RustSyntaxHighlighter {
         let mut iterator = line.split_word_bound_indices().peekable();
         while let Some((start_byte_idx, _)) = iterator.next() {
             let remainder = &line[start_byte_idx..];
-            if let Some(mut annotation) = annotate_char(remainder)
+            if let Some(mut annotation) = annotate_single_line_comment(remainder)
+                .or_else(|| annotate_char(remainder))
                 .or_else(|| annotate_lifetime_specifier(remainder))
                 .or_else(|| annotate_keyword(remainder))
                 .or_else(|| annotate_type(remainder))
@@ -111,6 +112,16 @@ fn annotate_lifetime_specifier(string: &str) -> Option<Annotation> {
                 end_byte_idx: idx.saturating_add(next_word.len()),
             });
         }
+    }
+    None
+}
+fn annotate_single_line_comment(string: &str) -> Option<Annotation> {
+    if string.starts_with("//") {
+        return Some(Annotation {
+            annotation_type: AnnotationType::Comment,
+            start_byte_idx: 0,
+            end_byte_idx: string.len(),
+        });
     }
     None
 }
